@@ -8,8 +8,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta property="og:title" content="Markets React to Global Oil Prices">
 <meta property="og:description" content="Interesting read on how global oil prices are impacting markets.">
-<meta property="og:url" content="https://yournews.com/news/markets-react-to-global-oil-prices">
 <meta property="og:type" content="article">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.description|truncatechars:160 }}">
+<meta property="og:image" content="{% if post.image %}{{ post.image.url }}{% endif %}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
 
 <title>Explore</title>
 
@@ -106,7 +109,8 @@ tailwind.config = {
     <!-- RIGHT CONTROLS: HAMBURGER + THEME TOGGLE -->
     <div class="flex items-center gap-3">
 
-      <!-- THEME TOGGLE -->
+      <!-- THEME TOGGLE (DESKTOP ONLY) -->
+    <div class="hidden md:flex items-center">
       <div class="toggle-button-container">
         <div class="btn btn-pill" id="button-9">
           <input type="checkbox" class="checkbox" id="themeToggle">
@@ -118,6 +122,7 @@ tailwind.config = {
           <div class="btn-bg"></div>
         </div>
       </div>
+    </div>
 
       <!-- HAMBURGER TOGGLE -->
       <button id="navToggle" class="text-2xl px-2 hover:text-neon transition select-none">
@@ -132,66 +137,54 @@ tailwind.config = {
 <div id="navDrawer"
      class="fixed top-0 right-0 z-50 h-screen w-full sm:w-[420px]
             bg-zinc-900/95 backdrop-blur border-l border-white/10
-            transition-transform duration-300 ease-out translate-x-full">
+            transition-transform duration-300 ease-out translate-x-full flex flex-col justify-between">
 
-  <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
-<!--    <h2 class="font-semibold text-lg">Filters</h2>-->
-    <button id="closeDrawer" class="text-2xl hover:text-neon">✕</button>
-  </div>
-
-  <div class="p-6 space-y-5 overflow-y-auto h-[calc(100vh-64px)]">
-<!--    <input id="drawerSearch" placeholder="Search news, blogs, releases…" class="w-full text-sm px-4 py-3 rounded-full bg-transparent border border-gray-400 placeholder-gray-500 outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500 transition-colors duration-300">-->
-
-<!--    <select id="drawerCategory" class="filter w-full transition-colors duration-300 mt-3">-->
-<!--      <option value="">Categories</option>-->
-<!--      <option value="News">News</option>-->
-<!--      <option value="Politics">Politics</option>-->
-<!--      <option value="Sports">Sports</option>-->
-<!--      <option value="Tech">Tech</option>-->
-<!--      <option value="Entertainment">Entertainment</option>-->
-<!--      <option value="Travel">Travel</option>-->
-<!--    </select>-->
-
-<!--    <select id="drawerMedia" class="filter w-full transition-colors duration-300 mt-3">-->
-<!--      <option value="">Media</option>-->
-<!--      <option value="Image">Image</option>-->
-<!--      <option value="Video">Video</option>-->
-<!--    </select>-->
-
-<!--    <input id="drawerDate" type="date" class="filter w-full transition-colors duration-300 mt-3">-->
-
-<!--    <select class="filter w-full transition-colors duration-300 mt-3">-->
-<!--      <option>Latest</option>-->
-<!--      <option>Oldest</option>-->
-<!--    </select>-->
-
-<!--    <button id="applyFiltersBtn" class="w-full py-3 rounded-xl bg-neon text-black font-semibold mt-4">Apply Filters</button>-->
-
-    <!-- MOBILE THEME TOGGLE -->
-    <div class="md:hidden flex items-center justify-between w-full mt-4">
-      <span class="text-sm font-medium select-none">Theme</span>
-      <div class="toggle-button-container">
-        <div class="btn btn-pill" id="button-9-mobile">
-          <input type="checkbox" class="checkbox" id="themeToggleMobile">
-          <div class="knob">
-            <i class="ph ph-sun icon-sun"></i>
-            <i class="ph ph-moon icon-moon"></i>
-            <span></span>
-          </div>
-          <div class="btn-bg"></div>
-        </div>
-      </div>
+  <!-- TOP: CLOSE BUTTON & THEME TOGGLE -->
+  <div class="p-6 space-y-5 overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <!-- Drawer Header -->
+      <h2 class="font-semibold text-lg ">Menu</h2>
+      <button id="closeDrawer" class="text-2xl hover:text-neon">✕</button>
     </div>
 
-    {% if user.is_authenticated %}
-  <a href="{% url 'logout' %}?next={{ request.path }}"
-     class="text-red-400 hover:text-red-500">
-     Logout
-  </a>
-{% else %}
-  <h3 onclick="openModal()" class="cursor-pointer">Login</h3>
-{% endif %}
 
+    <!-- NAV LINKS -->
+    <nav class="flex flex-col gap-3 mt-6  text-lg">
+      <a href="{% url 'index' %}" class="hover:text-red-500">Home</a>
+      <a href="" >My Account</a>
+      <a href="" >Recent Posts</a>
+      <a href="" >Categories</a>
+      <a href="" >About Us</a>
+      <a href="" >Contact</a>
+    </nav>
+
+      <!-- MOBILE THEME TOGGLE -->
+      <div class="md:hidden flex items-center justify-between w-full mt-4">
+        <span class="text-sm font-medium select-none">Theme</span>
+        <div class="toggle-button-container">
+          <div class="btn btn-pill" id="button-9-mobile">
+            <input type="checkbox" class="checkbox" id="themeToggleMobile">
+            <div class="knob">
+              <i class="ph ph-sun icon-sun"></i>
+              <i class="ph ph-moon icon-moon"></i>
+              <span></span>
+            </div>
+            <div class="btn-bg"></div>
+          </div>
+        </div>
+      </div>
+
+  </div>
+
+  <!-- BOTTOM: LOGIN/LOGOUT -->
+  <div class="p-6 border-t ">
+    {% if user.is_authenticated %}
+      <a href="{% url 'logout' %}?next={{ request.path }}"
+         class="block text-red-400 hover:text-red-500 font-semibold">Logout</a>
+    {% else %}
+      <h3 onclick="openModal()"
+          class="cursor-pointer  font-semibold">Login</h3>
+    {% endif %}
   </div>
 
 </div>
@@ -646,7 +639,8 @@ tailwind.config = {
 
       <!-- META -->
       <div class="text-gray-400 uppercase text-xs sm:text-sm mb-2">
-        {{ post.category.name }} • {{ post.location|default:"Unknown" }}
+        {{ post.category.name }} •
+<!--          {{ post.location|default:"Unknown" }}-->
       </div>
 
       <!-- TITLE -->
@@ -661,12 +655,12 @@ tailwind.config = {
       </div>
 
       <!-- ARTICLE CONTENT -->
-      <div class="space-y-4 text-gray-700 text-base sm:text-lg leading-relaxed">
+      <div class="space-y-4 text-base sm:text-lg leading-relaxed">
         {{ post.description|linebreaks }}
       </div>
 
       <!-- ACTION BAR -->
-      <div class="flex items-center gap-6 border-t mt-8 pt-4 text-gray-600">
+      <div class="flex items-center gap-6 border-t mt-8 pt-4">
 
         <!-- POST LIKE -->
         <button id="postLikeBtn" data-post-id="{{ post.id }}" class="flex items-center gap-1">
@@ -684,11 +678,19 @@ tailwind.config = {
           <span class="text-sm font-medium">Comments</span>
         </button>
 
-        <!-- SHARE -->
-        <button id="shareBtn" class="flex items-center gap-2 hover:text-blue-500 transition ml-auto">
-          <i class="ph ph-share-network text-xl"></i>
-          <span class="text-sm font-medium">Share</span>
-        </button>
+
+        <!-- SHARE BUTTON -->
+<button id="shareBtn" class="flex items-center gap-2 hover:text-blue-500 transition ml-auto">
+  <i class="ph ph-share-network text-xl"></i>
+  <span class="text-sm font-medium">Share</span>
+</button>
+
+<!-- Optional: Hidden input for post data -->
+<input type="hidden" id="postShareData"
+       data-title="{{ post.title }}"
+       data-url="{{ request.build_absolute_uri }}"
+       data-image="{% if post.image %}{{ post.image.url }}{% else %}/static/img/default-share.jpg{% endif %}">
+
       </div>
 
       <!-- COMMENTS SECTION -->
@@ -769,6 +771,234 @@ tailwind.config = {
 
 <!-- Hidden CSRF form -->
 <form id="csrfForm" style="display:none;">{% csrf_token %}</form>
+
+
+
+
+
+
+
+
+
+
+
+<section class="mt-16 border-t pt-10 px-6 sm:px-10 lg:px-20 xl:px-28">
+  <h2 class="text-2xl sm:text-3xl font-serif font-bold mb-8">
+    Related News
+  </h2>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- LEFT: FEATURED TEXT -->
+    {% if related_posts|length > 0 %}
+    <a href="{% url 'newsview' related_posts.0.id %}" class="flex flex-col justify-center group">
+      <h2 class="text-4xl font-serif font-bold leading-tight group-hover:underline">
+        {{ related_posts.0.title }}
+      </h2>
+
+      <p class="mt-4 ">
+        {{ related_posts.0.description|truncatechars:160 }}
+      </p>
+
+      <p class="text-sm  mt-3">
+        {{ related_posts.0.created_at|timesince }} ago | {{ related_posts.0.category.name }}
+      </p>
+    </a>
+
+    <!-- CENTER: FEATURED MEDIA -->
+    <a href="{% url 'newsview' related_posts.0.id %}" class="group">
+      {% if related_posts.0.image %}
+        <img src="{{ related_posts.0.image.url }}" class="w-full h-[420px] object-cover">
+      {% elif related_posts.0.video %}
+        <video src="{{ related_posts.0.video.url }}" class="w-full h-[420px] object-cover" autoplay muted loop playsinline></video>
+      {% endif %}
+    </a>
+    {% endif %}
+
+    <!-- RIGHT: STACKED NEWS -->
+    <div class="space-y-6">
+      {% for post in related_posts|slice:"1:4" %}
+      <a href="{% url 'newsview' post.id %}" class="flex gap-4 group">
+        {% if post.image %}
+          <img src="{{ post.image.url }}" class="w-32 h-24 object-cover">
+        {% elif post.video %}
+          <video src="{{ post.video.url }}" class="w-32 h-24 object-cover" autoplay muted loop playsinline></video>
+        {% endif %}
+        <div>
+          <h3 class="font-serif font-bold text-lg leading-snug group-hover:underline">
+            {{ post.title|truncatechars:70 }}
+          </h3>
+          <p class="text-sm mt-1">
+            {{ post.created_at|timesince }} ago | {{ post.category.name }}
+          </p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  {% if related_posts|length > 3 %}
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+    {% for post in related_posts|slice:"3:6" %}
+    <a href="{% url 'newsview' post.id %}" class="group">
+      {% if post.image %}
+        <img src="{{ post.image.url }}" class="w-full h-48 object-cover mb-3 rounded">
+      {% elif post.video %}
+        <video src="{{ post.video.url }}" class="w-full h-48 object-cover mb-3 rounded" autoplay muted loop playsinline></video>
+      {% endif %}
+      <h4 class="font-serif font-bold text-lg leading-snug group-hover:underline">
+        {{ post.title|truncatechars:80 }}
+      </h4>
+      <p class="text-sm mt-2">
+        {{ post.description|truncatechars:110 }}
+      </p>
+      <div class="text-xs  mt-2">
+        {{ post.created_at|timesince }} ago | {{ post.category.name }}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</section>
+
+
+
+
+<footer class="mt-20 border-t  px-6 sm:px-10 lg:px-20 xl:px-28">
+  <div class="py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
+
+    <!-- BRAND / PLATFORM -->
+    <div>
+      <h2 class="text-2xl font-extrabold tracking-tight">
+        EXPLORE<span class="text-neon">.</span>
+      </h2>
+      <p class="mt-4 text-sm  leading-relaxed">
+        A modern platform for reading, publishing, and sharing news and blogs.
+        Stay informed, tell your story, and engage with ideas that matter.
+      </p>
+    </div>
+
+    <!-- READ -->
+    <div>
+      <h3 class="text-sm font-semibold uppercase tracking-wider">
+        Read
+      </h3>
+      <ul class="mt-4 space-y-2 text-sm ">
+        <li><a href="#" class="hover:underline">Latest News</a></li>
+        <li><a href="#" class="hover:underline">Popular Blogs</a></li>
+        <li><a href="#" class="hover:underline">Categories</a></li>
+        <li><a href="#" class="hover:underline">Editor's Picks</a></li>
+      </ul>
+    </div>
+
+    <!-- WRITE -->
+    <div>
+      <h3 class="text-sm font-semibold uppercase  tracking-wider">
+        Write
+      </h3>
+      <ul class="mt-4 space-y-2 text-sm ">
+        <li><a href="#" class="hover:underline">Create Post</a></li>
+        <li><a href="#" class="hover:underline">Writer Guidelines</a></li>
+        <li><a href="#" class="hover:underline">Community Rules</a></li>
+        <li><a href="#" class="hover:underline">Become a Contributor</a></li>
+      </ul>
+    </div>
+
+    <!-- NEWSLETTER -->
+    <div>
+      <h3 class="text-sm font-semibold uppercase  tracking-wider">
+        Stay Updated
+      </h3>
+      <p class="mt-4 text-sm ">
+        Weekly highlights from top news and blogs — straight to your inbox.
+      </p>
+
+      <form class="mt-4 flex">
+        <input
+          type="email"
+          placeholder="Your email address"
+          class="flex-1 rounded-l-lg border px-4 py-2 text-sm focus:outline-none"
+        />
+        <button
+          type="submit"
+          class="rounded-r-lg bg-black  px-4 text-sm hover:bg-gray-800">
+          Subscribe
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="border-t py-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500">
+    <p>
+      © {{ now|date:"Y" }} News Platform. All rights reserved.
+    </p>
+
+    <div class="flex gap-6 mt-4 md:mt-0">
+      <a href="#" class="hover:underline">Privacy</a>
+      <a href="#" class="hover:underline">Terms</a>
+      <a href="#" class="hover:underline">Contact</a>
+    </div>
+  </div>
+</footer>
+
+
+
+<script>
+const shareBtn = document.getElementById('shareBtn');
+const postData = document.getElementById('postShareData');
+
+shareBtn.addEventListener('click', async () => {
+    const title = postData.dataset.title;
+    const url = postData.dataset.url;
+    const image = postData.dataset.image;
+
+    // Modern Web Share API (mobile & supported browsers)
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: title,
+                text: title,
+                url: url,
+            });
+            console.log('Shared successfully');
+        } catch (err) {
+            console.error('Error sharing:', err);
+        }
+    } else {
+        // Fallback: open share options for major platforms
+        const facebook = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        const twitter = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+        const linkedin = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        const whatsapp = `https://api.whatsapp.com/send?text=${encodeURIComponent(title + ' ' + url)}`;
+
+        // Open a small popup menu for user to choose platform
+        const shareWindow = window.open('', 'shareWindow', 'width=600,height=400');
+        shareWindow.document.write(`
+            <h3>Share this post</h3>
+            <ul style="list-style:none;padding:0;">
+                <li><a href="${facebook}" target="_blank">Facebook</a></li>
+                <li><a href="${twitter}" target="_blank">Twitter</a></li>
+                <li><a href="${linkedin}" target="_blank">LinkedIn</a></li>
+                <li><a href="${whatsapp}" target="_blank">WhatsApp</a></li>
+            </ul>
+        `);
+    }
+});
+</script>
+
+
+
+
+
+
+
+
+
+
 
 <!-- JS START -->
 <script>
@@ -1608,359 +1838,6 @@ document.addEventListener("click", e => {
 </script>
 
 
-<!--<style>-->
-<!--/* ===== RECORDING ANIMATION ===== */-->
-<!--.recordingOverlay {-->
-<!--  display: none; /* hidden by default */-->
-<!--  background: transparent; /* no bg */-->
-<!--  border-radius: inherit;-->
-<!--  z-index: 10;-->
-<!--  font-weight: 600;-->
-<!--  color: #ef4444; /* spikes color */-->
-<!--  align-items: center;-->
-<!--  justify-content: center;-->
-<!--  pointer-events: none;-->
-<!--  gap: 6px;-->
-<!--}-->
-
-<!--.recordingOverlay.active {-->
-<!--  display: flex; /* show overlay when recording */-->
-<!--}-->
-
-<!--.recordingWave {-->
-<!--  width: 24px;-->
-<!--  height: 6px;-->
-<!--  background: rgba(239,68,68,0.6);-->
-<!--  border-radius: 3px;-->
-<!--  position: relative;-->
-<!--  overflow: hidden;-->
-<!--}-->
-
-<!--.recordingWave::before {-->
-<!--  content: '';-->
-<!--  position: absolute;-->
-<!--  left: -100%;-->
-<!--  width: 100%;-->
-<!--  height: 100%;-->
-<!--  background: linear-gradient(90deg, transparent, rgba(239,68,68,1), transparent);-->
-<!--  animation: waveMove 1s linear infinite;-->
-<!--}-->
-
-<!--@keyframes waveMove {-->
-<!--  0% { left: -100%; }-->
-<!--  100% { left: 100%; }-->
-<!--}-->
-
-<!--/* ===== RECORDING BUTTON ===== */-->
-<!--.recording {-->
-<!--  position: relative;-->
-<!--  background: transparent !important; /* removed bg */-->
-<!--  color: #ef4444 !important;-->
-<!--  border-radius: 9999px !important;-->
-<!--  padding: 0 12px !important;-->
-<!--  display: flex;-->
-<!--  align-items: center;-->
-<!--  gap: 6px;-->
-<!--  justify-content: center;-->
-<!--  min-width: 48px;-->
-<!--  transition: all 0.2s;-->
-<!--}-->
-
-<!--.recordingTimer {-->
-<!--  font-size: 13px;-->
-<!--  font-weight: 600;-->
-<!--}-->
-<!--</style>-->
-
-<!--<script>-->
-<!--    /* ======================================================-->
-<!--   GLOBAL VARIABLES-->
-<!--===================================================== */-->
-<!--let loginModal, signupModal, forgotModal;-->
-<!--let loginBtn, signupBtn, forgotBtn;-->
-<!--let signupError, forgotError;-->
-
-<!--let layer, spinner, check, cross, pulse;-->
-<!--let textSuccess, textFail;-->
-
-<!--/* ======================================================-->
-<!--   INITIALIZE-->
-<!--===================================================== */-->
-<!--window.addEventListener("load", () => {-->
-<!--  // Modals-->
-<!--  loginModal  = document.getElementById("loginModal");-->
-<!--  signupModal = document.getElementById("signupModal");-->
-<!--  forgotModal = document.getElementById("forgotModal");-->
-
-<!--  // Buttons-->
-<!--  loginBtn  = document.getElementById("loginBtn");-->
-<!--  signupBtn = document.getElementById("signupBtn");-->
-<!--  forgotBtn = document.getElementById("forgotBtn");-->
-
-<!--  // Errors-->
-<!--  signupError = document.getElementById("signupError");-->
-<!--  forgotError = document.getElementById("forgotError");-->
-
-<!--  // Success / Fail layer-->
-<!--  layer = document.getElementById("successLayer");-->
-<!--  spinner = document.getElementById("spinner");-->
-<!--  check = document.getElementById("checkmark");-->
-<!--  cross = document.getElementById("cross");-->
-<!--  pulse = document.getElementById("pulseBg");-->
-<!--  textSuccess = document.getElementById("successText");-->
-<!--  textFail = document.getElementById("failText");-->
-
-<!--  // Prevent # jump-->
-<!--  document.querySelectorAll("[data-open]").forEach(el => {-->
-<!--    el.addEventListener("click", e => e.preventDefault());-->
-<!--  });-->
-
-<!--  attachModalEvents();-->
-<!--});-->
-
-<!--/* ======================================================-->
-<!--   MODAL EVENTS-->
-<!--===================================================== */-->
-<!--function attachModalEvents() {-->
-<!--  document.querySelectorAll("[data-open='login']").forEach(el =>-->
-<!--    el.addEventListener("click", () => openModal("login"))-->
-<!--  );-->
-
-<!--  document.querySelectorAll("[data-open='signup']").forEach(el =>-->
-<!--    el.addEventListener("click", () => openModal("signup"))-->
-<!--  );-->
-
-<!--  document.querySelectorAll("[data-open='forgot']").forEach(el =>-->
-<!--    el.addEventListener("click", () => openModal("forgot"))-->
-<!--  );-->
-
-<!--  loginBtn?.addEventListener("click", simulateLogin);-->
-<!--  signupBtn?.addEventListener("click", handleSignup);-->
-<!--  forgotBtn?.addEventListener("click", handleForgot);-->
-<!--}-->
-
-<!--/* ======================================================-->
-<!--   OPEN / CLOSE MODALS (FIXED)-->
-<!--===================================================== */-->
-<!--function openModal(type = "login") {-->
-<!--  closeAllModals();-->
-
-<!--  let modal = null;-->
-<!--  if (type === "login") modal = loginModal;-->
-<!--  if (type === "signup") modal = signupModal;-->
-<!--  if (type === "forgot") modal = forgotModal;-->
-
-<!--  if (modal) {-->
-<!--    modal.classList.remove("hidden");-->
-<!--    modal.classList.remove("pointer-events-none"); // ✅ FIX-->
-<!--  }-->
-
-<!--  document.body.classList.add("overflow-hidden");-->
-<!--}-->
-
-<!--function closeModal(id) {-->
-<!--  const modal = document.getElementById(id);-->
-<!--  modal?.classList.add("hidden");-->
-<!--  modal?.classList.add("pointer-events-none");-->
-<!--  document.body.classList.remove("overflow-hidden");-->
-<!--}-->
-
-<!--function closeAllModals() {-->
-<!--  [loginModal, signupModal, forgotModal].forEach(m => {-->
-<!--    if (!m) return;-->
-<!--    m.classList.add("hidden");-->
-<!--    m.classList.add("pointer-events-none"); // ✅ restore-->
-<!--  });-->
-<!--}-->
-
-<!--/* ======================================================-->
-<!--   LOGIN / SIGNUP / FORGOT-->
-<!--===================================================== */-->
-<!--function simulateLogin() {-->
-<!--  const u = document.getElementById("username").value.trim();-->
-<!--  const p = document.getElementById("password").value;-->
-
-<!--  if (!u || !p) {-->
-<!--    showFail("Please enter username and password");-->
-<!--    return;-->
-<!--  }-->
-
-<!--  // Disable button while processing-->
-<!--  loginBtn.disabled = true;-->
-
-<!--  // Reset previous errors / animations-->
-<!--  resetAnimations();-->
-
-<!--  fetch("/login-ajax/", {-->
-<!--    method: "POST",-->
-<!--    headers: {-->
-<!--      "Content-Type": "application/x-www-form-urlencoded",-->
-<!--      "X-CSRFToken": getCookie("csrftoken")-->
-<!--    },-->
-<!--    body: new URLSearchParams({-->
-<!--      username: u,-->
-<!--      password: p-->
-<!--    })-->
-<!--  })-->
-<!--  .then(res => {-->
-<!--    if (!res.ok) throw new Error("Network response was not ok");-->
-<!--    return res.json();-->
-<!--  })-->
-<!--  .then(data => {-->
-<!--    if (data.success) {-->
-<!--      showSuccess(data.message);-->
-<!--    } else {-->
-<!--      showFail(data.error);-->
-<!--    }-->
-<!--  })-->
-<!--  .catch(err => {-->
-<!--    console.error("Login error:", err);-->
-<!--    showFail("Something went wrong. Try again.");-->
-<!--  })-->
-<!--  .finally(() => {-->
-<!--    // Re-enable button-->
-<!--    loginBtn.disabled = false;-->
-<!--  });-->
-<!--}-->
-
-
-<!--function handleSignup() {-->
-<!--  const u = signupUsername.value.trim();-->
-<!--  const e = signupEmail.value.trim();-->
-<!--  const p = signupPassword.value;-->
-<!--  const c = signupConfirm.value;-->
-
-<!--  if (!u || !e || !p || !c) {-->
-<!--    signupError.textContent = "All fields are required";-->
-<!--    signupError.classList.remove("hidden");-->
-<!--    return;-->
-<!--  }-->
-
-<!--  signupError.classList.add("hidden");-->
-
-<!--  fetch("/signup-ajax/", {-->
-<!--    method: "POST",-->
-<!--    headers: {-->
-<!--      "Content-Type": "application/x-www-form-urlencoded",-->
-<!--      "X-CSRFToken": getCookie("csrftoken")-->
-<!--    },-->
-<!--    body: new URLSearchParams({-->
-<!--      username: u,-->
-<!--      email: e,-->
-<!--      password: p,-->
-<!--      confirm: c-->
-<!--    })-->
-<!--  })-->
-<!--  .then(res => res.json())-->
-<!--  .then(data => {-->
-<!--    if (data.success) {-->
-<!--      showSuccess("Account created successfully");-->
-<!--    } else {-->
-<!--      signupError.textContent = data.error;-->
-<!--      signupError.classList.remove("hidden");-->
-<!--    }-->
-<!--  })-->
-<!--  .catch(() => {-->
-<!--    signupError.textContent = "Server error. Try again.";-->
-<!--    signupError.classList.remove("hidden");-->
-<!--  });-->
-<!--}-->
-
-<!--function handleForgot() {-->
-<!--  const value = document.getElementById("forgotUsername").value.trim();-->
-
-<!--  if (!value) {-->
-<!--    forgotError.textContent = "Enter username or email";-->
-<!--    forgotError.classList.remove("hidden");-->
-<!--    return;-->
-<!--  }-->
-
-<!--  forgotError.classList.add("hidden");-->
-
-<!--  fetch("/forgot-password-ajax/", {-->
-<!--    method: "POST",-->
-<!--    headers: {-->
-<!--      "Content-Type": "application/x-www-form-urlencoded",-->
-<!--      "X-CSRFToken": getCookie("csrftoken")-->
-<!--    },-->
-<!--    body: new URLSearchParams({ username: value })-->
-<!--  })-->
-<!--  .then(res => res.json())-->
-<!--  .then(data => {-->
-<!--    if (data.success) {-->
-<!--      showSuccess(data.message);-->
-<!--    } else {-->
-<!--      forgotError.textContent = data.error;-->
-<!--      forgotError.classList.remove("hidden");-->
-<!--    }-->
-<!--  })-->
-<!--  .catch(() => {-->
-<!--    forgotError.textContent = "Server error. Try again.";-->
-<!--    forgotError.classList.remove("hidden");-->
-<!--  });-->
-<!--}-->
-
-
-<!--/* ======================================================-->
-<!--   CSRF HELPER (REQUIRED)-->
-<!--===================================================== */-->
-<!--function getCookie(name) {-->
-<!--  let cookieValue = null;-->
-<!--  if (document.cookie && document.cookie !== "") {-->
-<!--    const cookies = document.cookie.split(";");-->
-<!--    for (let cookie of cookies) {-->
-<!--      cookie = cookie.trim();-->
-<!--      if (cookie.startsWith(name + "=")) {-->
-<!--        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));-->
-<!--        break;-->
-<!--      }-->
-<!--    }-->
-<!--  }-->
-<!--  return cookieValue;-->
-<!--}-->
-
-<!--/* ======================================================-->
-<!--   SUCCESS / FAIL ANIMATION-->
-<!--===================================================== */-->
-<!--function resetAnimations() {-->
-<!--  spinner.classList.remove("hidden");-->
-<!--  check.classList.add("hidden");-->
-<!--  cross.classList.add("hidden");-->
-<!--  pulse.classList.add("hidden");-->
-<!--  textSuccess.classList.add("hidden");-->
-<!--  textFail.classList.add("hidden");-->
-<!--}-->
-
-<!--function showSuccess(msg) {-->
-<!--  resetAnimations();-->
-<!--  layer.classList.remove("hidden");-->
-
-<!--  textSuccess.textContent = msg;-->
-<!--  textSuccess.classList.remove("hidden");-->
-
-<!--  setTimeout(() => {-->
-<!--    spinner.classList.add("hidden");-->
-<!--    check.classList.remove("hidden");-->
-<!--    pulse.classList.remove("hidden");-->
-
-<!--    setTimeout(() => {-->
-<!--      layer.classList.add("hidden");-->
-<!--      closeAllModals();-->
-<!--    }, 1200);-->
-<!--  }, 600);-->
-<!--}-->
-
-<!--function showFail(msg) {-->
-<!--  resetAnimations();-->
-<!--  layer.classList.remove("hidden");-->
-
-<!--  spinner.classList.add("hidden");-->
-<!--  cross.classList.remove("hidden");-->
-<!--  textFail.textContent = msg;-->
-<!--  textFail.classList.remove("hidden");-->
-
-<!--  setTimeout(() => layer.classList.add("hidden"), 1200);-->
-<!--}-->
 
 
 <!--</script>-->

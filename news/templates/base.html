@@ -97,77 +97,85 @@ tailwind.config = {
      class="fixed top-0 right-0 z-50 h-screen w-full sm:w-[420px]
             bg-zinc-900/95 backdrop-blur border-l border-white/10
             transition-transform duration-300 ease-out
-            translate-x-full">
+            translate-x-full flex flex-col justify-between">
 
-  <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 transition-colors duration-300">
-    <h2 class="font-semibold text-lg">Filters</h2>
-    <button id="closeDrawer" class="text-2xl hover:text-neon">✕</button>
-  </div>
-
-  <div class="p-6 space-y-5 overflow-y-auto h-[calc(100vh-64px)]">
-    <input id="drawerSearch" placeholder="Search news, blogs, releases…" class="w-full text-sm px-4 py-3 rounded-full bg-transparent border border-gray-400 placeholder-gray-500 outline-none transition-colors duration-300 focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
-
-    <div class="space-y-3">
-     <!-- Category -->
-  <select id="drawerCategory" name="category" class="filter w-full">
-
-  <option value="">Categories</option>
-  {% for category in categories %}
-    <option value="{{ category.id }}"
-      {% if request.GET.category == category.id|stringformat:"s" %} selected {% endif %}>
-      {{ category.name }}
-    </option>
-  {% endfor %}
-</select>
-  <!-- Media -->
-  <select id="drawerMedia" name="media" class="filter w-full transition-colors duration-300">
-    <option value="">Media</option>
-    <option value="Image" {% if request.GET.media == "Image" %} selected {% endif %}>Image</option>
-    <option value="Video" {% if request.GET.media == "Video" %} selected {% endif %}>Video</option>
-  </select>
-
-  <!-- Date -->
-  <input id="drawerDate" name="date" type="date" value="{{ request.GET.date|default:'' }}"
-         class="filter w-full transition-colors duration-300">
-
-  <!-- Sorting -->
-  <select name="sort" class="filter w-full transition-colors duration-300">
-    <option value="latest" {% if request.GET.sort == "latest" or not request.GET.sort %} selected {% endif %}>Latest</option>
-    <option value="oldest" {% if request.GET.sort == "oldest" %} selected {% endif %}>Oldest</option>
-  </select>
-</div>
-
-    <button id="applyFiltersBtn" class="w-full py-3 rounded-xl bg-neon text-black font-semibold"
-        onclick="applyFilters()">
-  Apply Filters
-</button>
-    <!-- MOBILE THEME TOGGLE -->
-    <div class="md:hidden flex items-center justify-between w-full mt-4">
-      <span class="text-sm font-medium select-none">Theme</span>
-      <div class="toggle-button-container">
-        <div class="btn btn-pill" id="button-9-mobile">
-          <input type="checkbox" class="checkbox" id="themeToggleMobile">
-          <div class="knob">
-            <i class="ph ph-sun icon-sun"></i>
-            <i class="ph ph-moon icon-moon"></i>
-            <span></span>
-          </div>
-          <div class="btn-bg"></div>
-        </div>
-      </div>
+  <!-- TOP: Header + Scrollable Content -->
+  <div class="flex-1 overflow-y-auto">
+    <!-- HEADER -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 transition-colors duration-300">
+      <h2 class="font-semibold text-lg">Filters</h2>
+      <button id="closeDrawer" class="text-2xl hover:text-neon">✕</button>
     </div>
 
-    {% if user.is_authenticated %}
-  <a href="{% url 'logout' %}?next={{ request.path }}"
-     class="text-red-400 hover:text-red-500">
-     Logout
-  </a>
-{% else %}
-  <h3 onclick="openModal()" class="cursor-pointer">Login</h3>
-{% endif %}
+    <!-- SCROLLABLE CONTENT -->
+    <div class="p-6 space-y-5">
+      <input id="drawerSearch" placeholder="Search news, blogs, releases…" class="w-full text-sm px-4 py-3 rounded-full bg-transparent border border-gray-400 placeholder-gray-500 outline-none transition-colors duration-300 focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
 
+      <div class="space-y-3">
+        <!-- Category -->
+        <select id="drawerCategory" name="category" class="filter w-full">
+          <option value="">Categories</option>
+          {% for category in categories %}
+            <option value="{{ category.id }}"
+              {% if request.GET.category == category.id|stringformat:"s" %} selected {% endif %}>
+              {{ category.name }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <!-- Media -->
+        <select id="drawerMedia" name="media" class="filter w-full transition-colors duration-300">
+          <option value="">Media</option>
+          <option value="Image" {% if request.GET.media == "Image" %} selected {% endif %}>Image</option>
+          <option value="Video" {% if request.GET.media == "Video" %} selected {% endif %}>Video</option>
+        </select>
+
+        <!-- Date -->
+        <input id="drawerDate" name="date" type="date" value="{{ request.GET.date|default:'' }}"
+               class="filter w-full transition-colors duration-300">
+
+        <!-- Sorting -->
+        <select name="sort" class="filter w-full transition-colors duration-300">
+          <option value="latest" {% if request.GET.sort == "latest" or not request.GET.sort %} selected {% endif %}>Latest</option>
+          <option value="oldest" {% if request.GET.sort == "oldest" %} selected {% endif %}>Oldest</option>
+        </select>
+      </div>
+
+      <button id="applyFiltersBtn" class="w-full py-3 rounded-xl bg-neon text-black font-semibold"
+          onclick="applyFilters()">
+        Apply Filters
+      </button>
+
+      <!-- MOBILE THEME TOGGLE -->
+      <div class="md:hidden flex items-center justify-between w-full mt-4">
+        <span class="text-sm font-medium select-none">Theme</span>
+        <div class="toggle-button-container">
+          <div class="btn btn-pill" id="button-9-mobile">
+            <input type="checkbox" class="checkbox" id="themeToggleMobile">
+            <div class="knob">
+              <i class="ph ph-sun icon-sun"></i>
+              <i class="ph ph-moon icon-moon"></i>
+              <span></span>
+            </div>
+            <div class="btn-bg"></div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
   </div>
 
+  <!-- BOTTOM: LOGIN/LOGOUT -->
+  <div class="p-6 border-t">
+    {% if user.is_authenticated %}
+      <a href="{% url 'logout' %}?next={{ request.path }}"
+         class="block text-red-400 hover:text-red-500 font-semibold">Logout</a>
+    {% else %}
+      <h3 onclick="openModal()"
+          class="cursor-pointer  font-semibold">Login</h3>
+    {% endif %}
+  </div>
 
 </div>
 

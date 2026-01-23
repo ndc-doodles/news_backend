@@ -326,11 +326,23 @@ def index(request):
 
 def newsview(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+
     categories = Category.objects.all().order_by("name")
 
-    comments = Comment.objects.filter(
-        post=post
-    ).select_related("user", "user__profile").order_by("-created_at")
+    comments = (
+        Comment.objects
+        .filter(post=post)
+        .select_related("user", "user__profile")
+        .order_by("-created_at")
+    )
+
+    # ✅ RELATED NEWS (same category, exclude current post)
+    related_posts = (
+        Post.objects
+        .filter(category=post.category)
+        .exclude(id=post.id)
+        .order_by("-created_at")[:10]
+    )
 
     profile = None
     if request.user.is_authenticated:
@@ -341,7 +353,8 @@ def newsview(request, post_id):
         "categories": categories,
         "media_types": ["Image", "Video"],
         "profile": profile,
-        "comments": comments,   # ✅ REQUIRED
+        "comments": comments,        # existing
+        "related_posts": related_posts,  # ✅ NEW
     })
 
 

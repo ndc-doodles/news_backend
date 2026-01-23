@@ -11,7 +11,7 @@ urlpatterns = [
     # -----------------------
     # Admin URLs
     # -----------------------
-    path('admin/login/', views.superuser_login, name='login'),
+    path('adminlogin/', views.superuser_login, name='login'),
     path('dashboard/', views.admin_dashboard, name='admin-dashboard'),
     path('adminlogout/', views.user_logout, name='logout'),
 

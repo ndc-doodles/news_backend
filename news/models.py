@@ -58,6 +58,14 @@ class Post(models.Model):
     video = models.FileField(upload_to="posts/videos/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def related_posts(self, limit=5):
+        """
+        Returns other posts from the same category, excluding this post.
+        """
+        return Post.objects.filter(category=self.category).exclude(id=self.id).order_by('-created_at')[:limit]
+
+    def __str__(self):
+        return self.title
 
 
 class Signup(models.Model):
