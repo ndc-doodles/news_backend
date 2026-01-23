@@ -1,0 +1,1983 @@
+{% load static %}
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="Markets React to Global Oil Prices">
+<meta property="og:description" content="Interesting read on how global oil prices are impacting markets.">
+<meta property="og:url" content="https://yournews.com/news/markets-react-to-global-oil-prices">
+<meta property="og:type" content="article">
+
+<title>Explore</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: { neon: '#00ffe1' }
+    }
+  }
+}
+</script>
+
+<style>
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 50;
+  height: 100vh;
+  width: 100%;
+  max-width: 420px;
+
+  background-color: rgba(24,24,27,0.95);
+  backdrop-filter: blur(6px);
+  border-left: 1px solid rgba(255,255,255,0.1);
+
+  transform: translateX(100%);   /* CLOSED → offscreen right */
+  transition: transform 0.3s ease;
+}
+
+/* OPEN → slides right → left */
+.drawer.open {
+  transform: translateX(0);
+}
+
+
+/* CLOSE: left → right */
+.drawer.closing {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* ================= BACKDROP ================= */
+#backdrop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.6);
+  z-index: 40;
+}
+
+#backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ================= IG-STYLE TILE HOVER ================= */
+.card img {
+  transition: transform 0.35s ease;
+}
+
+.card:hover img {
+  transform: scale(1.05);
+}
+
+
+
+
+</style>
+
+</head>
+
+<body class="overflow-x-hidden" style="background-color: #ffffff; color: #000000">
+
+
+
+<!-- ================= NAVBAR ================= -->
+<!-- ================= NAVBAR ================= -->
+<nav id="navbar"
+     class="fixed top-0 inset-x-0 z-50 transition-colors duration-300 bg-transparent border-b border-transparent">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+
+    <!-- TITLE -->
+    <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">
+     Explore
+    </h1>
+
+    <!-- RIGHT CONTROLS: HAMBURGER + THEME TOGGLE -->
+    <div class="flex items-center gap-3">
+
+      <!-- THEME TOGGLE -->
+      <div class="toggle-button-container">
+        <div class="btn btn-pill" id="button-9">
+          <input type="checkbox" class="checkbox" id="themeToggle">
+          <div class="knob">
+            <i class="ph ph-sun icon-sun"></i>
+            <i class="ph ph-moon icon-moon"></i>
+            <span></span>
+          </div>
+          <div class="btn-bg"></div>
+        </div>
+      </div>
+
+      <!-- HAMBURGER TOGGLE -->
+      <button id="navToggle" class="text-2xl px-2 hover:text-neon transition select-none">
+        ☰
+      </button>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ================= DRAWER ================= -->
+<div id="navDrawer"
+     class="fixed top-0 right-0 z-50 h-screen w-full sm:w-[420px]
+            bg-zinc-900/95 backdrop-blur border-l border-white/10
+            transition-transform duration-300 ease-out translate-x-full">
+
+  <div class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+<!--    <h2 class="font-semibold text-lg">Filters</h2>-->
+    <button id="closeDrawer" class="text-2xl hover:text-neon">✕</button>
+  </div>
+
+  <div class="p-6 space-y-5 overflow-y-auto h-[calc(100vh-64px)]">
+<!--    <input id="drawerSearch" placeholder="Search news, blogs, releases…" class="w-full text-sm px-4 py-3 rounded-full bg-transparent border border-gray-400 placeholder-gray-500 outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500 transition-colors duration-300">-->
+
+<!--    <select id="drawerCategory" class="filter w-full transition-colors duration-300 mt-3">-->
+<!--      <option value="">Categories</option>-->
+<!--      <option value="News">News</option>-->
+<!--      <option value="Politics">Politics</option>-->
+<!--      <option value="Sports">Sports</option>-->
+<!--      <option value="Tech">Tech</option>-->
+<!--      <option value="Entertainment">Entertainment</option>-->
+<!--      <option value="Travel">Travel</option>-->
+<!--    </select>-->
+
+<!--    <select id="drawerMedia" class="filter w-full transition-colors duration-300 mt-3">-->
+<!--      <option value="">Media</option>-->
+<!--      <option value="Image">Image</option>-->
+<!--      <option value="Video">Video</option>-->
+<!--    </select>-->
+
+<!--    <input id="drawerDate" type="date" class="filter w-full transition-colors duration-300 mt-3">-->
+
+<!--    <select class="filter w-full transition-colors duration-300 mt-3">-->
+<!--      <option>Latest</option>-->
+<!--      <option>Oldest</option>-->
+<!--    </select>-->
+
+<!--    <button id="applyFiltersBtn" class="w-full py-3 rounded-xl bg-neon text-black font-semibold mt-4">Apply Filters</button>-->
+
+    <!-- MOBILE THEME TOGGLE -->
+    <div class="md:hidden flex items-center justify-between w-full mt-4">
+      <span class="text-sm font-medium select-none">Theme</span>
+      <div class="toggle-button-container">
+        <div class="btn btn-pill" id="button-9-mobile">
+          <input type="checkbox" class="checkbox" id="themeToggleMobile">
+          <div class="knob">
+            <i class="ph ph-sun icon-sun"></i>
+            <i class="ph ph-moon icon-moon"></i>
+            <span></span>
+          </div>
+          <div class="btn-bg"></div>
+        </div>
+      </div>
+    </div>
+
+    {% if user.is_authenticated %}
+  <a href="{% url 'logout' %}?next={{ request.path }}"
+     class="text-red-400 hover:text-red-500">
+     Logout
+  </a>
+{% else %}
+  <h3 onclick="openModal()" class="cursor-pointer">Login</h3>
+{% endif %}
+
+  </div>
+
+</div>
+
+<!-- BACKDROP -->
+<div id="backdrop" class="hidden fixed inset-0 bg-black/60 z-40"></div>
+
+
+
+<!--&lt;!&ndash; ================= NEWS PAGE ================= &ndash;&gt;-->
+<!--<div class="max-w-7xl mx-auto mt-28 px-4">-->
+
+<!--  <div class="flex flex-col md:flex-row gap-8">-->
+
+<!--    &lt;!&ndash; LEFT MEDIA &ndash;&gt;-->
+<!--    <div-->
+<!--      class="relative w-full md:w-1/2-->
+<!--             h-[55vh] sm:h-[60vh] md:h-[75vh]-->
+<!--             rounded-xl overflow-hidden-->
+<!--             md:sticky md:top-28">-->
+
+<!--      {% if post.image %}-->
+<!--      <img-->
+<!--        src="{{ post.image.url }}"-->
+<!--        class="w-full h-full object-cover"-->
+<!--        alt="{{ post.title }}" />-->
+<!--      {% elif post.video %}-->
+<!--      <video-->
+<!--        src="{{ post.video.url }}"-->
+<!--        class="w-full h-full object-cover"-->
+<!--        autoplay muted loop playsinline></video>-->
+<!--      {% else %}-->
+<!--      <img-->
+<!--        src="https://picsum.photos/800/1000"-->
+<!--        class="w-full h-full object-cover"-->
+<!--        alt="{{ post.title }}" />-->
+<!--      {% endif %}-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; RIGHT CONTENT &ndash;&gt;-->
+<!--    <div-->
+<!--      class="w-full md:w-1/2-->
+<!--             md:max-h-[75vh]-->
+<!--             md:overflow-y-auto-->
+<!--             md:pr-3 scrollbar-hide">-->
+
+<!--      &lt;!&ndash; META &ndash;&gt;-->
+<!--      <div class="text-gray-400 uppercase text-xs sm:text-sm mb-2">-->
+<!--        {{ post.category.name }} • {{ post.location|default:"Unknown" }}-->
+<!--      </div>-->
+
+<!--      &lt;!&ndash; TITLE &ndash;&gt;-->
+<!--      <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">-->
+<!--        {{ post.title }}-->
+<!--      </h1>-->
+
+<!--      &lt;!&ndash; AUTHOR &ndash;&gt;-->
+<!--      <div class="flex items-center gap-3 text-gray-400 text-sm mb-6">-->
+<!--        <img src="https://i.pravatar.cc/40" class="w-9 h-9 rounded-full">-->
+<!--        <span>By {{ post.author|default:"Admin" }}</span>-->
+<!--        <span>•</span>-->
+<!--        <span>{{ post.created_at|timesince }} ago</span>-->
+<!--      </div>-->
+
+<!--      &lt;!&ndash; ARTICLE CONTENT &ndash;&gt;-->
+<!--      <div class="space-y-4 text-gray-700 text-base sm:text-lg leading-relaxed">-->
+<!--        {{ post.description|linebreaks }}-->
+<!--      </div>-->
+
+<!--      &lt;!&ndash; ACTION BAR &ndash;&gt;-->
+<!--      <div class="flex items-center gap-6 border-t mt-8 pt-4 text-gray-600">-->
+<!--        <label class="flex items-center gap-2 cursor-pointer select-none">-->
+<!--          <input type="checkbox" class="hidden peer">-->
+<!--          <i class="ph ph-heart text-xl peer-checked:ph-fill peer-checked:text-red-500 transition"></i>-->
+<!--          <span class="text-sm font-medium peer-checked:text-red-500">1.2k</span>-->
+<!--        </label>-->
+
+<!--        <button id="commentToggle" class="flex items-center gap-2 hover:text-neon transition">-->
+<!--          <i class="ph ph-chat-circle text-xl"></i>-->
+<!--          <span class="text-sm font-medium">Comments</span>-->
+<!--        </button>-->
+
+<!--        <button id="shareBtn"-->
+<!--                class="flex items-center gap-2 hover:text-blue-500 transition ml-auto">-->
+<!--          <i class="ph ph-share-network text-xl"></i>-->
+<!--          <span class="text-sm font-medium">Share</span>-->
+<!--        </button>-->
+<!--      </div>-->
+
+<!--      &lt;!&ndash; COMMENTS &ndash;&gt;-->
+<!--<div id="commentsSection"-->
+<!--     class="mt-10 opacity-0 translate-y-12 overflow-hidden transition-all duration-500"-->
+<!--     style="max-height:0">-->
+
+<!--  <h2 class="text-xl font-bold mb-6">Comments</h2>-->
+
+<!--  &lt;!&ndash; EXISTING COMMENTS &ndash;&gt;-->
+<!--  <div id="commentList" class="space-y-6">-->
+<!--    {% for comment in comments %}-->
+<!--    <div class="commentItem">-->
+<!--      <div class="flex gap-3">-->
+<!--        <img-->
+<!--          src="{{ comment.user.profile.avatar|default:'/static/avatar.png' }}"-->
+<!--          class="w-9 h-9 rounded-full"-->
+<!--        >-->
+<!--        <div class="flex-1">-->
+<!--          <div class="font-semibold text-sm">-->
+<!--            {{ comment.user.profile.full_name|default:comment.user.username }}-->
+<!--          </div>-->
+
+<!--          {% if comment.text %}-->
+<!--            <div class="bg-gray-100 p-3 rounded-2xl mt-1">-->
+<!--              {{ comment.text }}-->
+<!--            </div>-->
+<!--          {% endif %}-->
+
+<!--          {% if comment.audio %}-->
+<!--            <audio controls class="mt-2 w-full">-->
+<!--              <source src="{{ comment.audio.url }}">-->
+<!--            </audio>-->
+<!--          {% endif %}-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    {% empty %}-->
+<!--      <p class="text-sm text-gray-500">No comments yet.</p>-->
+<!--    {% endfor %}-->
+<!--  </div>-->
+
+<!--  &lt;!&ndash; ADD COMMENT &ndash;&gt;-->
+<!--  <div class="mt-10 pt-6 border-t">-->
+
+<!--    {% if user.is_authenticated %}-->
+<!--    &lt;!&ndash; LOGGED IN &ndash;&gt;-->
+<!--    <div class="flex gap-3 relative">-->
+<!--      <img-->
+<!--        src="{{ user.profile.avatar|default:'/static/avatar.png' }}"-->
+<!--        class="w-10 h-10 rounded-full"-->
+<!--      >-->
+
+<!--      <textarea id="commentInput"-->
+<!--                class="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm"-->
+<!--                rows="1"-->
+<!--                placeholder="Add a comment…"></textarea>-->
+
+<!--      <div id="commentRecordingOverlay"-->
+<!--           class="recordingOverlay hidden absolute inset-0 flex items-center justify-center pointer-events-none">-->
+<!--        <div class="recordingWave"></div>-->
+<!--        <span class="ml-2 recordingTimer">0s</span>-->
+<!--      </div>-->
+
+<!--      <button id="commentActionBtn"-->
+<!--              class="w-12 h-12 rounded-full bg-gray-200 text-xl">-->
+<!--        🎤-->
+<!--      </button>-->
+<!--    </div>-->
+
+<!--    {% else %}-->
+<!--    &lt;!&ndash; NOT LOGGED IN &ndash;&gt;-->
+<!--    <div class="flex gap-3 items-center">-->
+<!--      <img src="/static/avatar.png" class="w-10 h-10 rounded-full opacity-50">-->
+
+<!--      <div-->
+<!--        class="flex-1 px-4 py-3 rounded-2xl border text-sm text-gray-500 cursor-pointer bg-gray-50"-->
+<!--        onclick="openModal('login')">-->
+<!--        Login to add a comment…-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    {% endif %}-->
+
+<!--  </div>-->
+<!--</div>-->
+
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
+
+
+
+
+
+
+<script>
+  // ===== CONFIG =====
+  const headline = "Markets React to Global Oil Prices";
+  const githubHostedLink = "https://username.github.io/NEWS_FRONTEND/newsview.html";
+
+  // ===== SHARE BUTTON =====
+  document.getElementById("shareBtn").addEventListener("click", async () => {
+    // Use hosted link if on localhost, otherwise current page
+    const articleLink = window.location.hostname.includes("localhost")
+      ? githubHostedLink
+      : window.location.href;
+
+    const shareText = `${headline}\n${articleLink}`;
+
+    const shareData = {
+      title: headline,
+      text: shareText,
+      url: articleLink
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log("Share cancelled");
+      }
+    } else {
+      openShareFallback(shareText, articleLink);
+    }
+  });
+
+  // ===== FALLBACK POPUP =====
+  function openShareFallback(text, url) {
+    const encodedText = encodeURIComponent(text);
+    const encodedURL = encodeURIComponent(url);
+
+    const popup = `
+      <div id="sharePopup"
+        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-6 w-80 space-y-4">
+          <h3 class="font-bold text-lg">Share</h3>
+
+          <a href="https://wa.me/?text=${encodedText}" target="_blank" class="block">WhatsApp</a>
+          <a href="https://twitter.com/intent/tweet?text=${encodedText}" target="_blank" class="block">X / Twitter</a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedURL}" target="_blank" class="block">Facebook</a>
+          <a href="mailto:?subject=${encodeURIComponent(headline)}&body=${encodedText}" class="block">Email</a>
+
+          <button onclick="document.getElementById('sharePopup').remove()"
+            class="mt-4 w-full bg-gray-100 rounded-lg py-2">
+            Close
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", popup);
+  }
+</script>
+
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999]">
+  <div id="modalContent" class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001]">
+    <button onclick="closeModal('loginModal')" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+
+    <h2 class="text-2xl font-bold text-center">Welcome Back</h2>
+    <p class="text-center text-gray-500 mb-6">Login to continue</p>
+
+   <a href="{% provider_login_url 'google' process='login' next='/' %}"
+   class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition duration-200 shadow-sm">
+    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" class="w-5 h-5">
+    <span class="text-sm font-medium text-gray-700">Continue with Google</span>
+</a>
+
+
+
+
+
+
+
+    <div class="flex items-center gap-4 mb-5">
+      <hr class="flex-1">
+      <span class="text-gray-400 text-sm">or</span>
+      <hr class="flex-1">
+    </div>
+
+    <input id="username" type="text" placeholder="Username or email" class="w-full px-4 py-2 mb-4 border border-gray-400 rounded-lg bg-transparent placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
+
+    <input id="password" type="password" placeholder="Password" class="w-full px-4 py-2 mb-2 border border-gray-400 rounded-lg bg-transparent placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
+
+   <div class="text-right mb-4">
+  <a href="#" data-open="forgot" class="text-sm text-indigo-600 hover:underline">
+    Forgot password?
+  </a>
+</div>
+
+
+    <button id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition">
+      Login
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+  Don't have an account?
+  <a href="#" data-open="signup" class="text-indigo-600 hover:underline">
+    Sign up
+  </a>
+</p>
+      </div>
+</div>
+
+
+<!-- SIGNUP MODAL -->
+<div
+  id="signupModal"
+  class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999] pointer-events-none"
+>
+  <div
+    class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001] pointer-events-auto"
+  >
+
+    <!-- CLOSE -->
+    <button
+      type="button"
+      onclick="closeModal('signupModal')"
+      class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl"
+    >
+      &times;
+    </button>
+
+    <h2 class="text-2xl font-bold text-center">Create Account</h2>
+    <p class="text-center text-gray-500 mb-6">Sign up to continue</p>
+
+    <input
+      id="signupUsername"
+      type="text"
+      placeholder="Username"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupEmail"
+      type="email"
+      placeholder="Email"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupPassword"
+      type="password"
+      placeholder="Password"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupConfirm"
+      type="password"
+      placeholder="Confirm Password"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <p id="signupError" class="text-red-600 text-sm mb-4 hidden"></p>
+
+    <!-- IMPORTANT FIX -->
+    <button
+      id="signupBtn"
+      type="button"
+      class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold"
+    >
+      Sign Up
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+      Already have an account?
+      <a
+        href="#"
+        onclick="openModal('login')"
+        class="text-indigo-600 hover:underline"
+      >
+        Login
+      </a>
+    </p>
+
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div id="forgotModal" class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999]">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001]">
+
+    <!-- CLOSE -->
+    <button onclick="closeModal('forgotModal')" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl">
+      &times;
+    </button>
+
+    <h2 class="text-2xl font-bold text-center">Forgot Password</h2>
+    <p class="text-center text-gray-500 mb-6">
+      Enter your username or email to reset password
+    </p>
+
+    <input
+      id="forgotUsername"
+      type="text"
+      placeholder="Username or email"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <p id="forgotError" class="text-red-600 text-sm mb-4 hidden"></p>
+
+    <button id="forgotBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold">
+      Reset Password
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+      Remembered your password?
+      <a href="#" onclick="openModal('login')" class="text-indigo-600 hover:underline">
+        Login
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- SUCCESS / FAIL LAYER -->
+<div id="successLayer" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white z-[10000]">
+  <div class="relative flex flex-col items-center justify-center">
+    <div id="pulseBg" class="hidden pulse-bg"></div>
+    <div id="spinner" class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+    <svg id="checkmark" class="hidden w-20 h-20 text-green-500 mb-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    </svg>
+    <svg id="cross" class="hidden w-20 h-20 text-red-500 mb-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 6L18 18M6 18L18 6"/>
+    </svg>
+  </div>
+  <p id="successText" class="mt-4 text-lg font-semibold text-green-600 hidden text-success"></p>
+  <p id="failText" class="mt-4 text-lg font-semibold text-red-600 hidden text-fail"></p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- ================= NEWS PAGE ================= -->
+<div class="max-w-7xl mx-auto mt-28 px-4">
+
+  <div class="flex flex-col md:flex-row gap-8">
+
+    <!-- LEFT MEDIA -->
+    <div class="relative w-full md:w-1/2
+                h-[55vh] sm:h-[60vh] md:h-[75vh]
+                rounded-xl overflow-hidden
+                md:sticky md:top-28">
+
+      {% if post.image %}
+      <img src="{{ post.image.url }}" class="w-full h-full object-cover" alt="{{ post.title }}" />
+      {% elif post.video %}
+      <video src="{{ post.video.url }}" class="w-full h-full object-cover" autoplay muted loop playsinline></video>
+      {% else %}
+      <img src="https://picsum.photos/800/1000" class="w-full h-full object-cover" alt="{{ post.title }}" />
+      {% endif %}
+    </div>
+
+    <!-- RIGHT CONTENT -->
+    <div class="w-full md:w-1/2 md:max-h-[75vh] md:overflow-y-auto md:pr-3 scrollbar-hide">
+
+      <!-- META -->
+      <div class="text-gray-400 uppercase text-xs sm:text-sm mb-2">
+        {{ post.category.name }} • {{ post.location|default:"Unknown" }}
+      </div>
+
+      <!-- TITLE -->
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">{{ post.title }}</h1>
+
+      <!-- AUTHOR -->
+      <div class="flex items-center gap-3 text-gray-400 text-sm mb-6">
+        <img src="https://i.pravatar.cc/40" class="w-9 h-9 rounded-full">
+        <span>By {{ post.author|default:"Admin" }}</span>
+        <span>•</span>
+        <span>{{ post.created_at|timesince }} ago</span>
+      </div>
+
+      <!-- ARTICLE CONTENT -->
+      <div class="space-y-4 text-gray-700 text-base sm:text-lg leading-relaxed">
+        {{ post.description|linebreaks }}
+      </div>
+
+      <!-- ACTION BAR -->
+      <div class="flex items-center gap-6 border-t mt-8 pt-4 text-gray-600">
+
+        <!-- POST LIKE -->
+        <button id="postLikeBtn" data-post-id="{{ post.id }}" class="flex items-center gap-1">
+  <svg class="w-5 h-5 heartIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318 1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
+  </svg>
+  <span id="postLikeCount">{{ post.likes.count }}</span>
+</button>
+
+
+        <!-- COMMENTS TOGGLE -->
+        <button id="commentToggle" class="flex items-center gap-2 hover:text-neon transition">
+          <i class="ph ph-chat-circle text-xl"></i>
+          <span class="text-sm font-medium">Comments</span>
+        </button>
+
+        <!-- SHARE -->
+        <button id="shareBtn" class="flex items-center gap-2 hover:text-blue-500 transition ml-auto">
+          <i class="ph ph-share-network text-xl"></i>
+          <span class="text-sm font-medium">Share</span>
+        </button>
+      </div>
+
+      <!-- COMMENTS SECTION -->
+      <div id="commentsSection" class="mt-10 opacity-0 translate-y-12 overflow-hidden transition-all duration-500" style="max-height:0" data-post-id="{{ post.id }}">
+        <h2 class="text-xl font-bold mb-6">Comments</h2>
+
+        <!-- EXISTING COMMENTS -->
+        <div id="commentList" class="space-y-6">
+          {% for comment in comments %}
+          <div class="commentItem" data-comment-id="{{ comment.id }}">
+            <div class="flex gap-3">
+              <img src="{{ comment.user.profile.avatar|default:'/static/avatar.png' }}" class="w-9 h-9 rounded-full">
+              <div class="flex-1">
+                <div class="font-semibold text-sm">{{ comment.user.profile.full_name|default:comment.user.username }}</div>
+
+                {% if comment.text %}
+                <div class="bg-gray-100 p-3 rounded-2xl mt-1">{{ comment.text }}</div>
+                {% endif %}
+
+                {% if comment.audio %}
+                <audio controls class="mt-2 w-full">
+                  <source src="{{ comment.audio.url }}">
+                </audio>
+                {% endif %}
+
+                <div class="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                  <button class="replyBtn">Reply</button>
+
+                  <!-- COMMENT LIKE BUTTON -->
+                  <button class="likeBtn flex items-center gap-1" data-comment-id="{{ comment.id }}">
+                    <svg class="w-4 h-4 heartIcon {% if user_liked_comment %}liked{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318 1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z" />
+                    </svg>
+                    <span class="likeCount">{{ comment.likes.count }}</span>
+                  </button>
+
+                  {% if user == comment.user %}
+                  <button class="deleteBtn">Delete</button>
+                  {% endif %}
+                </div>
+                <div class="replies ml-8 mt-2"></div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-sm text-gray-500">No comments yet.</p>
+          {% endfor %}
+        </div>
+
+        <!-- ADD COMMENT -->
+        <div class="mt-10 pt-6 border-t">
+          {% if user.is_authenticated %}
+          <div class="flex gap-3 relative">
+            <img src="{{ user.profile.avatar|default:'/static/avatar.png' }}" class="w-10 h-10 rounded-full">
+            <textarea id="commentInput" class="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm" rows="1" placeholder="Add a comment…"></textarea>
+            <div id="commentRecordingOverlay" class="recordingOverlay hidden absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="recordingWave"></div>
+              <span class="ml-2 recordingTimer">0s</span>
+            </div>
+            <button id="commentActionBtn" class="w-12 h-12 rounded-full bg-gray-200 text-xl">🎤</button>
+          </div>
+          {% else %}
+          <div class="flex gap-3 items-center">
+            <img src="/static/avatar.png" class="w-10 h-10 rounded-full opacity-50">
+            <div class="flex-1 px-4 py-3 rounded-2xl border text-sm text-gray-500 cursor-pointer bg-gray-50" onclick="openModal('login')">
+              Login to add a comment…
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Hidden CSRF form -->
+<form id="csrfForm" style="display:none;">{% csrf_token %}</form>
+
+<!-- JS START -->
+<script>
+// ---------------- ELEMENTS ----------------
+const toggleBtn = document.getElementById("commentToggle");
+const comments = document.getElementById("commentsSection");
+const list = document.getElementById("commentList");
+const input = document.getElementById("commentInput");
+const commentActionBtn = document.getElementById("commentActionBtn");
+const commentOverlay = document.getElementById("commentRecordingOverlay");
+const postLikeBtn = document.getElementById("postLikeBtn");
+const postLikeCount = document.getElementById("postLikeCount");
+
+// ---------------- STATE ----------------
+let open = false;
+let activeRecorder = null;
+let activeChunks = [];
+let activeInterval = null;
+let activeReplyRecorder = null;
+let activeReplyChunks = [];
+let activeReplyInterval = null;
+
+// ---------------- TOGGLE COMMENTS ----------------
+toggleBtn.onclick = () => {
+  open = !open;
+  if(open){
+    comments.classList.remove("opacity-0","translate-y-12");
+    comments.classList.add("opacity-100","translate-y-0");
+    comments.style.maxHeight = comments.scrollHeight+"px";
+  } else {
+    comments.classList.add("opacity-0","translate-y-12");
+    comments.classList.remove("opacity-100","translate-y-0");
+    comments.style.maxHeight = "0px";
+  }
+};
+
+// ---------------- AUTO RESIZE ----------------
+function autoResize(t){
+  t.style.height="auto";
+  t.style.height=t.scrollHeight+"px";
+}
+input.oninput = () => { autoResize(input); updateBtn(input, commentActionBtn); };
+
+// ---------------- BUTTON STATE ----------------
+function updateBtn(textarea, button){
+  if(textarea.value.trim()){
+    button.textContent="Post";
+    button.className="px-4 py-2 rounded-2xl bg-neon text-black text-sm";
+  } else {
+    button.textContent="🎤";
+    button.className="w-12 h-12 rounded-full bg-gray-200 text-xl";
+  }
+}
+
+// ---------------- GET CSRF ----------------
+function getCSRFToken(){
+  const tokenInput = document.querySelector('#csrfForm input[name="csrfmiddlewaretoken"]');
+  return tokenInput ? tokenInput.value : '';
+}
+
+// ---------------- HANDLE COMMENT/AUDIO ----------------
+async function handleAction(textarea, button, callback, overlay=null, isReply=false){
+  const parent_id = textarea.dataset.parentId || null;
+
+  if(textarea.value.trim()){
+    await callback({text: textarea.value.trim(), parent_id});
+    textarea.value="";
+    autoResize(textarea);
+    updateBtn(textarea, button);
+    return;
+  }
+
+  if(isReply && activeReplyRecorder){ activeReplyRecorder.stop(); return; }
+  if(!isReply && activeRecorder){ activeRecorder.stop(); return; }
+
+  const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  const recorder = new MediaRecorder(stream);
+  const chunks = [];
+
+  if(isReply){ activeReplyRecorder = recorder; activeReplyChunks = chunks; }
+  else { activeRecorder = recorder; activeChunks = chunks; }
+
+  if(overlay){
+    overlay.classList.add("active");
+    let sec=0;
+    const timer = overlay.querySelector(".recordingTimer");
+    const interval = setInterval(()=>{ sec++; if(timer) timer.textContent = sec+"s"; },1000);
+    if(isReply) activeReplyInterval = interval;
+    else activeInterval = interval;
+  }
+
+  recorder.ondataavailable = e => chunks.push(e.data);
+
+  recorder.onstop = async () => {
+    const blob = new Blob(chunks,{type:"audio/webm"});
+    const file = new File([blob], `comment_audio_${Date.now()}.webm`, {type:"audio/webm"});
+    await callback({audio:file, parent_id});
+
+    if(overlay){
+      overlay.classList.remove("active");
+      if(isReply) clearInterval(activeReplyInterval);
+      else clearInterval(activeInterval);
+    }
+
+    if(isReply) activeReplyRecorder = null;
+    else activeRecorder = null;
+
+    updateBtn(textarea, button);
+  };
+
+  recorder.start();
+}
+
+// ---------------- POST COMMENT ----------------
+async function postComment({text="", audio=null, parent_id=null}){
+  const postId = comments.dataset.postId;
+  const formData = new FormData();
+  formData.append("post_id", postId);
+  if(text) formData.append("text", text);
+  if(audio) formData.append("audio", audio);
+  if(parent_id) formData.append("parent_id", parent_id);
+
+  try {
+    const res = await fetch("/comment/add/", {
+      method:"POST",
+      headers:{ "X-CSRFToken": getCSRFToken() },
+      body: formData
+    });
+    const data = await res.json();
+    if(res.ok) addCommentToUI(data);
+    else alert(data.error || "Failed to post comment");
+  } catch(err){
+    console.error(err);
+    alert("Error posting comment");
+  }
+}
+
+// ---------------- POST LIKE ----------------
+if(postLikeBtn){
+  postLikeBtn.onclick = async () => {
+    const postId = postLikeBtn.dataset.postId;
+    try{
+      const res = await fetch("/post/like/", {
+        method:"POST",
+        headers: {"X-CSRFToken": getCSRFToken()},
+        body: new URLSearchParams({post_id: postId})
+      });
+      const data = await res.json();
+      if(res.ok){
+        // Update count
+        postLikeCount.textContent = data.likes_count;
+
+        // Update heart icon
+        const heart = postLikeBtn.querySelector(".heartIcon");
+        if(data.user_liked) heart.classList.add("liked");
+        else heart.classList.remove("liked");
+      }
+    }catch(err){
+      console.error("Error liking post", err);
+      alert("Failed to like post.");
+    }
+  }
+}
+
+// ---------------- ATTACH EVENTS ----------------
+function attachCommentEvents(commentEl){
+  const commentId = commentEl.dataset.commentId;
+
+  // LIKE
+  const likeBtn = commentEl.querySelector(".likeBtn");
+  if(likeBtn){
+    likeBtn.onclick = async () => {
+      const res = await fetch("/comment/like/", {
+        method:"POST",
+        headers: {"X-CSRFToken": getCSRFToken()},
+        body: new URLSearchParams({comment_id:commentId})
+      });
+      const data = await res.json();
+      likeBtn.querySelector(".likeCount").textContent = data.likes_count;
+    };
+  }
+
+  // DELETE
+  const deleteBtn = commentEl.querySelector(".deleteBtn");
+  if(deleteBtn){
+    deleteBtn.onclick = async () => {
+      const res = await fetch("/comment/delete/", {
+        method:"POST",
+        headers: {"X-CSRFToken": getCSRFToken()},
+        body: new URLSearchParams({comment_id:commentId})
+      });
+      const data = await res.json();
+      if(data.success) commentEl.remove();
+      else alert(data.error || "Cannot delete");
+    };
+  }
+
+  // REPLY
+  const replyBtn = commentEl.querySelector(".replyBtn");
+  if(replyBtn){
+    replyBtn.onclick = () => {
+      if(commentEl.querySelector(".replyBoxContainer")) return;
+      const container = document.createElement("div");
+      container.className = "replyBoxContainer mt-2";
+      const wrapper = document.createElement("div");
+      wrapper.className = "flex gap-3 relative";
+      const avatar = document.createElement("img");
+      avatar.src="/static/avatar.png";
+      avatar.className="w-10 h-10 rounded-full";
+      const textarea = document.createElement("textarea");
+      textarea.className="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm";
+      textarea.rows=1;
+      textarea.placeholder="Add a reply…";
+      textarea.dataset.parentId=commentId;
+      const overlay=document.createElement("div");
+      overlay.className="recordingOverlay hidden absolute inset-0 flex items-center justify-center pointer-events-none";
+      overlay.innerHTML=`<div class="recordingWave"></div><span class="ml-2 recordingTimer">0s</span>`;
+      const actionBtn=document.createElement("button");
+      actionBtn.className="w-12 h-12 rounded-full bg-gray-200 text-xl";
+      actionBtn.textContent="🎤";
+      wrapper.append(avatar, textarea, overlay, actionBtn);
+      container.appendChild(wrapper);
+      commentEl.querySelector(".flex-1").appendChild(container);
+      textarea.oninput = ()=>{ autoResize(textarea); updateBtn(textarea, actionBtn); };
+      actionBtn.onclick = ()=>handleAction(textarea, actionBtn, postComment, overlay, true);
+    };
+  }
+}
+
+// ---------------- INITIALIZE ----------------
+document.querySelectorAll(".commentItem").forEach(el => attachCommentEvents(el));
+
+// ---------------- ADD COMMENT TO UI ----------------
+function addCommentToUI({id, text="", audio="", username="You", avatar="/static/avatar.png", parent_id=null, likes_count=0}){
+  const c = document.createElement("div");
+  c.className="commentItem";
+  c.dataset.commentId=id;
+  c.innerHTML = `
+    <div class="flex gap-3">
+      <img src="${avatar}" class="w-9 h-9 rounded-full">
+      <div class="flex-1">
+        <div class="font-semibold text-sm">${username}</div>
+        ${text ? `<div class="bg-gray-100 p-3 rounded-2xl mt-1">${text}</div>` : ""}
+        ${audio ? `<audio controls class="mt-2 w-full"><source src="${audio}"></audio>` : ""}
+        <div class="flex items-center gap-4 mt-1 text-sm text-gray-500">
+          <button class="replyBtn">Reply</button>
+          <button class="likeBtn flex items-center gap-1">
+            <svg class="w-4 h-4 heartIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318 1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
+            </svg>
+            <span class="likeCount">${likes_count}</span>
+          </button>
+          <button class="deleteBtn">Delete</button>
+        </div>
+        <div class="replies ml-8 mt-2"></div>
+      </div>
+    </div>`;
+  if(parent_id){
+    const parentEl = document.querySelector(`.commentItem[data-comment-id='${parent_id}'] .replies`);
+    if(parentEl) parentEl.appendChild(c);
+  } else {
+    list.prepend(c);
+  }
+  attachCommentEvents(c);
+  comments.style.maxHeight = comments.scrollHeight+"px";
+}
+
+// ---------------- TOP LEVEL COMMENT ----------------
+commentActionBtn.onclick = ()=>handleAction(input, commentActionBtn, postComment, commentOverlay);
+</script>
+
+<style>
+/* RECORDING */
+.recordingOverlay{display:none;background:transparent;border-radius:inherit;z-index:10;font-weight:600;color:#ef4444;align-items:center;justify-content:center;pointer-events:none;gap:6px}
+.recordingOverlay.active{display:flex}
+.recordingWave{width:24px;height:6px;background:rgba(239,68,68,0.6);border-radius:3px;position:relative;overflow:hidden}
+.recordingWave::before{content:'';position:absolute;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(239,68,68,1),transparent);animation:waveMove 1s linear infinite}
+@keyframes waveMove{0%{left:-100%}100%{left:100%}}
+.recording{position:relative;background:transparent !important;color:#ef4444 !important;border-radius:9999px !important;padding:0 12px !important;display:flex;align-items:center;gap:6px;justify-content:center;min-width:48px;transition:all 0.2s}
+.recordingTimer{font-size:13px;font-weight:600}
+
+/* HEART ICONS */
+.heartIcon{stroke-width:2; color:#ef4444;}
+.heartIcon.liked{fill:#ef4444; stroke:none;}
+</style>
+
+
+
+
+
+
+<!-- ================= FILTER STYLE ================= -->
+<style>
+.filter {
+  background: rgba(39,39,42,.7);
+  color: #fff;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,.1);
+}
+.filter option { background: #18181b; }
+.filter:focus { border-color: #00ffe1; }
+
+
+ /* ======================================================
+   BUTTON 9 – THEME TOGGLE (DESKTOP + MOBILE FIXED)
+   ====================================================== */
+
+/* container (prevents flex stretch on mobile) */
+.toggle-button-container {
+  width: 74px;
+  height: 36px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* button shell */
+.btn {
+  position: relative;
+  width: 74px;
+  height: 36px;
+  overflow: hidden;
+}
+
+/* pill shape */
+.btn-pill,
+.btn-pill .btn-bg {
+  border-radius: 999px;
+}
+
+/* checkbox overlay */
+.checkbox {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 5;
+}
+
+/* background */
+.btn-bg {
+  position: absolute;
+  inset: 0;
+  background-color: blue;
+  transition: background-color 0.3s ease;
+  z-index: 1;
+}
+
+/* knob wrapper */
+.knob {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* ======================================================
+   SHARED ELEMENTS (DESKTOP + MOBILE)
+   ====================================================== */
+
+#button-9 .knob span,
+#button-9-mobile .knob span,
+#button-9 .icon-sun,
+#button-9-mobile .icon-sun,
+#button-9 .icon-moon,
+#button-9-mobile .icon-moon {
+  position: absolute;
+  top: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.4s cubic-bezier(0.18, 0.89, 0.35, 1.15);
+}
+
+/* sun icon */
+#button-9 .icon-sun,
+#button-9-mobile .icon-sun {
+  left: 6px;
+  color: #fff;
+  opacity: 1;
+  z-index: 3;
+}
+
+/* moon icon */
+#button-9 .icon-moon,
+#button-9-mobile .icon-moon {
+  right: 6px;
+  color: #fff;
+  opacity: 0;
+  z-index: 3;
+}
+
+/* sliding knob */
+#button-9 .knob span,
+#button-9-mobile .knob span {
+  left: 4px;
+  background-color: #03a9f4;
+  z-index: 2;
+}
+
+/* ======================================================
+   CHECKED STATE
+   ====================================================== */
+
+#button-9 .checkbox:checked + .knob .icon-sun,
+#button-9-mobile .checkbox:checked + .knob .icon-sun {
+  opacity: 0;
+}
+
+#button-9 .checkbox:checked + .knob .icon-moon,
+#button-9-mobile .checkbox:checked + .knob .icon-moon {
+  opacity: 1;
+}
+
+#button-9 .checkbox:checked + .knob span,
+#button-9-mobile .checkbox:checked + .knob span {
+  left: 42px;
+  background-color: #f44336;
+}
+
+#button-9 .checkbox:checked ~ .btn-bg,
+#button-9-mobile .checkbox:checked ~ .btn-bg {
+  background-color: #fcebeb;
+}
+
+/* ================= HARD MOBILE FIX ================= */
+@media (max-width: 768px) {
+
+  .toggle-button-container {
+    width: 74px !important;
+    height: 36px !important;
+
+    min-width: 74px !important;
+    max-width: 74px !important;
+
+    min-height: 36px !important;
+    max-height: 36px !important;
+
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    flex: none !important;
+    align-self: center !important;
+  }
+
+  .btn {
+    width: 74px !important;
+    height: 36px !important;
+
+    min-height: 36px !important;
+    max-height: 36px !important;
+
+    flex: none !important;
+  }
+
+  .knob,
+  .btn-bg {
+    height: 36px !important;
+  }
+}
+
+
+
+</style>
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+const toggle = document.getElementById('navToggle');
+const drawer = document.getElementById('navDrawer');
+const closeBtn = document.getElementById('closeDrawer');
+const backdrop = document.getElementById('backdrop');
+
+function openDrawer() {
+  drawer.classList.remove('translate-x-full');
+  backdrop.classList.remove('hidden');
+  backdrop.classList.add('visible');
+}
+
+function closeDrawer() {
+  drawer.classList.add('translate-x-full');
+  backdrop.classList.remove('visible');
+  setTimeout(() => backdrop.classList.add('hidden'), 300);
+}
+
+
+toggle.addEventListener('click', openDrawer);
+closeBtn.addEventListener('click', closeDrawer);
+backdrop.addEventListener('click', closeDrawer);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDrawer();
+});
+</script>
+
+
+<script>
+const desktopSearch = document.getElementById('desktopSearch');
+const drawerSearch = document.getElementById('drawerSearch');
+const cards = document.querySelectorAll('.card');
+
+function filterCards(query) {
+  const q = query.toLowerCase().trim();
+  cards.forEach(card => {
+    const text = (
+      card.dataset.title +
+      card.dataset.category +
+      card.dataset.media +
+      card.dataset.place
+    ).toLowerCase();
+    card.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+
+desktopSearch?.addEventListener('input', e => filterCards(e.target.value));
+drawerSearch?.addEventListener('input', e => filterCards(e.target.value));
+</script>
+
+
+<script>
+const desktopToggle = document.getElementById("themeToggle");
+const mobileToggle  = document.getElementById("themeToggleMobile");
+
+// ================= THEME STYLES =================
+const darkStyles = {
+  bodyBg: "#000",
+  bodyColor: "#fff",
+  navBg: "rgba(0,0,0,0.85)",
+  border: "rgba(255,255,255,0.1)",
+  inputBg: "#000",
+  inputColor: "#fff",
+  drawerBg: "rgba(24,24,27,0.95)"
+};
+
+const lightStyles = {
+  bodyBg: "#fff",
+  bodyColor: "#000",
+  navBg: "#fff",
+  border: "rgba(0,0,0,0.15)",
+  inputBg: "#fff",
+  inputColor: "#000",
+  drawerBg: "#f5f5f5"
+};
+
+// ================= APPLY THEME =================
+function applyTheme(theme) {
+  const s = theme === "dark" ? darkStyles : lightStyles;
+
+  document.body.style.backgroundColor = s.bodyBg;
+  document.body.style.color = s.bodyColor;
+
+  document.querySelector("nav").style.background = s.navBg;
+  document.querySelector("nav").style.borderColor = s.border;
+
+  document.querySelectorAll(".filter, select, input").forEach(el => {
+    el.style.backgroundColor = s.inputBg;
+    el.style.color = s.inputColor;
+    el.style.borderColor = s.border;
+  });
+
+  document.getElementById("navDrawer").style.background = s.drawerBg;
+
+  localStorage.setItem("theme", theme);
+}
+
+// ================= INIT =================
+const savedTheme = localStorage.getItem("theme") || "light";
+applyTheme(savedTheme);
+
+desktopToggle.checked = savedTheme === "dark";
+if (mobileToggle) mobileToggle.checked = desktopToggle.checked;
+
+// ================= SYNC TOGGLES =================
+desktopToggle.addEventListener("change", () => {
+  const theme = desktopToggle.checked ? "dark" : "light";
+  applyTheme(theme);
+  if (mobileToggle) mobileToggle.checked = desktopToggle.checked;
+});
+
+mobileToggle?.addEventListener("change", () => {
+  desktopToggle.checked = mobileToggle.checked;
+  desktopToggle.dispatchEvent(new Event("change"));
+});
+</script>
+
+
+<style>
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>
+
+
+<script>
+/* ================= ELEMENTS ================= */
+const toggleBtn = document.getElementById("commentToggle");
+const comments = document.getElementById("commentsSection");
+const input = document.getElementById("commentInput");
+const commentActionBtn = document.getElementById("commentActionBtn");
+const commentOverlay = document.getElementById("commentRecordingOverlay");
+const list = document.getElementById("commentList");
+
+/* ================= STATE ================= */
+let open = false;
+let activeRecorder = null;
+let activeChunks = [];
+let activeInterval = null;
+
+/* ================= HEIGHT ================= */
+function updateCommentsHeight() {
+  if (open) {
+    comments.style.maxHeight = comments.scrollHeight + "px";
+  }
+}
+
+/* ================= TOGGLE COMMENTS ================= */
+toggleBtn.onclick = () => {
+  open = !open;
+
+  if (open) {
+    comments.classList.remove("opacity-0", "translate-y-12");
+    comments.classList.add("opacity-100", "translate-y-0");
+    comments.style.maxHeight = comments.scrollHeight + "px";
+
+    setTimeout(() => {
+      comments.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 50);
+
+  } else {
+    comments.classList.add("opacity-0", "translate-y-12");
+    comments.classList.remove("opacity-100", "translate-y-0");
+    comments.style.maxHeight = "0px";
+  }
+};
+
+/* ================= AUTO RESIZE ================= */
+function autoResize(t) {
+  t.style.height = "auto";
+  t.style.height = t.scrollHeight + "px";
+}
+
+/* ================= BUTTON STATE ================= */
+function updateBtn(t, b) {
+  if (t.value.trim()) {
+    b.textContent = "Post";
+    b.className = "px-4 py-2 rounded-2xl bg-neon text-black text-sm";
+  } else {
+    b.textContent = "🎤";
+    b.className = "w-12 h-12 rounded-full bg-gray-200 text-xl";
+  }
+}
+
+input.oninput = () => {
+  autoResize(input);
+  updateBtn(input, commentActionBtn);
+};
+
+/* ================= AUDIO / TEXT HANDLER ================= */
+async function handleAction(textarea, button, callback, overlay = null) {
+  // TEXT MODE
+  if (textarea.value.trim()) {
+    callback({ text: textarea.value.trim() });
+    textarea.value = "";
+    autoResize(textarea);
+    updateBtn(textarea, button);
+    updateCommentsHeight();
+    return;
+  }
+
+  // STOP RECORDING
+  if (activeRecorder) {
+    activeRecorder.stop();
+    return;
+  }
+
+  // START RECORDING
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const recorder = new MediaRecorder(stream);
+  activeRecorder = recorder;
+  activeChunks = [];
+
+  if (overlay) {
+    overlay.classList.add("active");
+    let sec = 0;
+    const timer = overlay.querySelector(".recordingTimer");
+    activeInterval = setInterval(() => {
+      sec++;
+      if (timer) timer.textContent = sec + "s";
+    }, 1000);
+  }
+
+  recorder.ondataavailable = e => activeChunks.push(e.data);
+
+  recorder.onstop = async () => {
+    const blob = new Blob(activeChunks, { type: "audio/webm" });
+    await callback({ audio: blob });
+
+    if (overlay) {
+      overlay.classList.remove("active");
+      clearInterval(activeInterval);
+    }
+
+    activeRecorder = null;
+    updateBtn(textarea, button);
+    updateCommentsHeight();
+  };
+
+  recorder.start();
+}
+
+/* ================= COMMENT BUTTON ================= */
+commentActionBtn.onclick = () => {
+  handleAction(input, commentActionBtn, postComment, commentOverlay);
+};
+
+/* ================= POST COMMENT TO BACKEND ================= */
+async function postComment({ text = "", audio = null }) {
+  const postId = comments.dataset.postId;
+  const formData = new FormData();
+  formData.append("post_id", postId);
+  if (text) formData.append("text", text);
+  if (audio) formData.append("audio", audio);
+
+  const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+  const res = await fetch("/comment/add/", {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": csrfToken
+    },
+    body: formData
+  });
+
+  const data = await res.json();
+  if (res.ok) {
+    addCommentToUI(data);
+  } else {
+    alert(data.error || "Failed to post comment");
+  }
+}
+
+/* ================= ADD COMMENT TO UI ================= */
+function addCommentToUI({ text = "", audio = "", username = "You", avatar = "/static/avatar.png" }) {
+  const c = document.createElement("div");
+  c.className = "commentItem";
+  c.innerHTML = `
+    <div class="flex gap-3">
+      <img src="${avatar}" class="w-9 h-9 rounded-full">
+      <div class="flex-1">
+        <div class="font-semibold text-sm">${username}</div>
+        ${text ? `<div class="bg-gray-100 p-3 rounded-2xl mt-1">${text}</div>` : ""}
+        ${audio ? `<audio controls class="mt-2 w-full"><source src="${audio}"></audio>` : ""}
+        <div class="flex gap-4 mt-1 text-xs text-gray-500">
+          <button class="likeBtn"><i class="ph ph-heart"></i> <span>0</span></button>
+          <button class="replyBtn">Reply</button>
+        </div>
+        <div class="repliesList mt-2 ml-12 space-y-3"></div>
+        <div class="replySection hidden mt-2 ml-12"></div>
+      </div>
+    </div>`;
+  list.appendChild(c);
+  updateCommentsHeight();
+}
+
+/* ================= ADD REPLY ================= */
+function addReply(section, { text = "", audio = "" }) {
+  const list = section.closest(".commentItem").querySelector(".repliesList");
+  const r = document.createElement("div");
+  r.className = "flex gap-3 items-start";
+  r.innerHTML = `
+    <img src="https://i.pravatar.cc/40" class="w-8 h-8 rounded-full mt-1">
+    <div class="flex-1">
+      <div class="bg-gray-100 p-2 rounded-xl">
+        ${text ? `<div class="text-sm mb-1">${text}</div>` : ""}
+        ${audio ? `<audio controls class="w-full"><source src="${audio}"></audio>` : ""}
+      </div>
+    </div>`;
+  list.appendChild(r);
+  updateCommentsHeight();
+}
+
+/* ================= GLOBAL EVENTS ================= */
+document.addEventListener("click", e => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+
+  // LIKE
+  if (btn.classList.contains("likeBtn")) {
+    const i = btn.querySelector("i");
+    const s = btn.querySelector("span");
+    i.classList.toggle("ph-fill");
+    i.classList.toggle("text-red-500");
+    s.textContent =
+      +s.textContent + (i.classList.contains("ph-fill") ? 1 : -1);
+  }
+
+  // TOGGLE REPLY
+  if (btn.classList.contains("replyBtn")) {
+    btn.closest(".commentItem")
+      .querySelector(".replySection")
+      .classList.toggle("hidden");
+    updateCommentsHeight();
+  }
+
+  // CANCEL REPLY
+  if (btn.classList.contains("cancelReplyBtn")) {
+    btn.closest(".replySection").classList.add("hidden");
+    updateCommentsHeight();
+  }
+
+  // POST REPLY
+  if (btn.classList.contains("replyActionBtn")) {
+    const section = btn.closest(".replySection");
+    const textarea = section.querySelector(".replyInput");
+    const overlay = section.querySelector(".recordingOverlay");
+
+    handleAction(textarea, btn, async data => {
+      // Optional: send reply to backend here too
+      addReply(section, data);
+      section.classList.add("hidden");
+      textarea.value = "";
+    }, overlay);
+  }
+});
+</script>
+
+
+<!--<style>-->
+<!--/* ===== RECORDING ANIMATION ===== */-->
+<!--.recordingOverlay {-->
+<!--  display: none; /* hidden by default */-->
+<!--  background: transparent; /* no bg */-->
+<!--  border-radius: inherit;-->
+<!--  z-index: 10;-->
+<!--  font-weight: 600;-->
+<!--  color: #ef4444; /* spikes color */-->
+<!--  align-items: center;-->
+<!--  justify-content: center;-->
+<!--  pointer-events: none;-->
+<!--  gap: 6px;-->
+<!--}-->
+
+<!--.recordingOverlay.active {-->
+<!--  display: flex; /* show overlay when recording */-->
+<!--}-->
+
+<!--.recordingWave {-->
+<!--  width: 24px;-->
+<!--  height: 6px;-->
+<!--  background: rgba(239,68,68,0.6);-->
+<!--  border-radius: 3px;-->
+<!--  position: relative;-->
+<!--  overflow: hidden;-->
+<!--}-->
+
+<!--.recordingWave::before {-->
+<!--  content: '';-->
+<!--  position: absolute;-->
+<!--  left: -100%;-->
+<!--  width: 100%;-->
+<!--  height: 100%;-->
+<!--  background: linear-gradient(90deg, transparent, rgba(239,68,68,1), transparent);-->
+<!--  animation: waveMove 1s linear infinite;-->
+<!--}-->
+
+<!--@keyframes waveMove {-->
+<!--  0% { left: -100%; }-->
+<!--  100% { left: 100%; }-->
+<!--}-->
+
+<!--/* ===== RECORDING BUTTON ===== */-->
+<!--.recording {-->
+<!--  position: relative;-->
+<!--  background: transparent !important; /* removed bg */-->
+<!--  color: #ef4444 !important;-->
+<!--  border-radius: 9999px !important;-->
+<!--  padding: 0 12px !important;-->
+<!--  display: flex;-->
+<!--  align-items: center;-->
+<!--  gap: 6px;-->
+<!--  justify-content: center;-->
+<!--  min-width: 48px;-->
+<!--  transition: all 0.2s;-->
+<!--}-->
+
+<!--.recordingTimer {-->
+<!--  font-size: 13px;-->
+<!--  font-weight: 600;-->
+<!--}-->
+<!--</style>-->
+
+<!--<script>-->
+<!--    /* ======================================================-->
+<!--   GLOBAL VARIABLES-->
+<!--===================================================== */-->
+<!--let loginModal, signupModal, forgotModal;-->
+<!--let loginBtn, signupBtn, forgotBtn;-->
+<!--let signupError, forgotError;-->
+
+<!--let layer, spinner, check, cross, pulse;-->
+<!--let textSuccess, textFail;-->
+
+<!--/* ======================================================-->
+<!--   INITIALIZE-->
+<!--===================================================== */-->
+<!--window.addEventListener("load", () => {-->
+<!--  // Modals-->
+<!--  loginModal  = document.getElementById("loginModal");-->
+<!--  signupModal = document.getElementById("signupModal");-->
+<!--  forgotModal = document.getElementById("forgotModal");-->
+
+<!--  // Buttons-->
+<!--  loginBtn  = document.getElementById("loginBtn");-->
+<!--  signupBtn = document.getElementById("signupBtn");-->
+<!--  forgotBtn = document.getElementById("forgotBtn");-->
+
+<!--  // Errors-->
+<!--  signupError = document.getElementById("signupError");-->
+<!--  forgotError = document.getElementById("forgotError");-->
+
+<!--  // Success / Fail layer-->
+<!--  layer = document.getElementById("successLayer");-->
+<!--  spinner = document.getElementById("spinner");-->
+<!--  check = document.getElementById("checkmark");-->
+<!--  cross = document.getElementById("cross");-->
+<!--  pulse = document.getElementById("pulseBg");-->
+<!--  textSuccess = document.getElementById("successText");-->
+<!--  textFail = document.getElementById("failText");-->
+
+<!--  // Prevent # jump-->
+<!--  document.querySelectorAll("[data-open]").forEach(el => {-->
+<!--    el.addEventListener("click", e => e.preventDefault());-->
+<!--  });-->
+
+<!--  attachModalEvents();-->
+<!--});-->
+
+<!--/* ======================================================-->
+<!--   MODAL EVENTS-->
+<!--===================================================== */-->
+<!--function attachModalEvents() {-->
+<!--  document.querySelectorAll("[data-open='login']").forEach(el =>-->
+<!--    el.addEventListener("click", () => openModal("login"))-->
+<!--  );-->
+
+<!--  document.querySelectorAll("[data-open='signup']").forEach(el =>-->
+<!--    el.addEventListener("click", () => openModal("signup"))-->
+<!--  );-->
+
+<!--  document.querySelectorAll("[data-open='forgot']").forEach(el =>-->
+<!--    el.addEventListener("click", () => openModal("forgot"))-->
+<!--  );-->
+
+<!--  loginBtn?.addEventListener("click", simulateLogin);-->
+<!--  signupBtn?.addEventListener("click", handleSignup);-->
+<!--  forgotBtn?.addEventListener("click", handleForgot);-->
+<!--}-->
+
+<!--/* ======================================================-->
+<!--   OPEN / CLOSE MODALS (FIXED)-->
+<!--===================================================== */-->
+<!--function openModal(type = "login") {-->
+<!--  closeAllModals();-->
+
+<!--  let modal = null;-->
+<!--  if (type === "login") modal = loginModal;-->
+<!--  if (type === "signup") modal = signupModal;-->
+<!--  if (type === "forgot") modal = forgotModal;-->
+
+<!--  if (modal) {-->
+<!--    modal.classList.remove("hidden");-->
+<!--    modal.classList.remove("pointer-events-none"); // ✅ FIX-->
+<!--  }-->
+
+<!--  document.body.classList.add("overflow-hidden");-->
+<!--}-->
+
+<!--function closeModal(id) {-->
+<!--  const modal = document.getElementById(id);-->
+<!--  modal?.classList.add("hidden");-->
+<!--  modal?.classList.add("pointer-events-none");-->
+<!--  document.body.classList.remove("overflow-hidden");-->
+<!--}-->
+
+<!--function closeAllModals() {-->
+<!--  [loginModal, signupModal, forgotModal].forEach(m => {-->
+<!--    if (!m) return;-->
+<!--    m.classList.add("hidden");-->
+<!--    m.classList.add("pointer-events-none"); // ✅ restore-->
+<!--  });-->
+<!--}-->
+
+<!--/* ======================================================-->
+<!--   LOGIN / SIGNUP / FORGOT-->
+<!--===================================================== */-->
+<!--function simulateLogin() {-->
+<!--  const u = document.getElementById("username").value.trim();-->
+<!--  const p = document.getElementById("password").value;-->
+
+<!--  if (!u || !p) {-->
+<!--    showFail("Please enter username and password");-->
+<!--    return;-->
+<!--  }-->
+
+<!--  // Disable button while processing-->
+<!--  loginBtn.disabled = true;-->
+
+<!--  // Reset previous errors / animations-->
+<!--  resetAnimations();-->
+
+<!--  fetch("/login-ajax/", {-->
+<!--    method: "POST",-->
+<!--    headers: {-->
+<!--      "Content-Type": "application/x-www-form-urlencoded",-->
+<!--      "X-CSRFToken": getCookie("csrftoken")-->
+<!--    },-->
+<!--    body: new URLSearchParams({-->
+<!--      username: u,-->
+<!--      password: p-->
+<!--    })-->
+<!--  })-->
+<!--  .then(res => {-->
+<!--    if (!res.ok) throw new Error("Network response was not ok");-->
+<!--    return res.json();-->
+<!--  })-->
+<!--  .then(data => {-->
+<!--    if (data.success) {-->
+<!--      showSuccess(data.message);-->
+<!--    } else {-->
+<!--      showFail(data.error);-->
+<!--    }-->
+<!--  })-->
+<!--  .catch(err => {-->
+<!--    console.error("Login error:", err);-->
+<!--    showFail("Something went wrong. Try again.");-->
+<!--  })-->
+<!--  .finally(() => {-->
+<!--    // Re-enable button-->
+<!--    loginBtn.disabled = false;-->
+<!--  });-->
+<!--}-->
+
+
+<!--function handleSignup() {-->
+<!--  const u = signupUsername.value.trim();-->
+<!--  const e = signupEmail.value.trim();-->
+<!--  const p = signupPassword.value;-->
+<!--  const c = signupConfirm.value;-->
+
+<!--  if (!u || !e || !p || !c) {-->
+<!--    signupError.textContent = "All fields are required";-->
+<!--    signupError.classList.remove("hidden");-->
+<!--    return;-->
+<!--  }-->
+
+<!--  signupError.classList.add("hidden");-->
+
+<!--  fetch("/signup-ajax/", {-->
+<!--    method: "POST",-->
+<!--    headers: {-->
+<!--      "Content-Type": "application/x-www-form-urlencoded",-->
+<!--      "X-CSRFToken": getCookie("csrftoken")-->
+<!--    },-->
+<!--    body: new URLSearchParams({-->
+<!--      username: u,-->
+<!--      email: e,-->
+<!--      password: p,-->
+<!--      confirm: c-->
+<!--    })-->
+<!--  })-->
+<!--  .then(res => res.json())-->
+<!--  .then(data => {-->
+<!--    if (data.success) {-->
+<!--      showSuccess("Account created successfully");-->
+<!--    } else {-->
+<!--      signupError.textContent = data.error;-->
+<!--      signupError.classList.remove("hidden");-->
+<!--    }-->
+<!--  })-->
+<!--  .catch(() => {-->
+<!--    signupError.textContent = "Server error. Try again.";-->
+<!--    signupError.classList.remove("hidden");-->
+<!--  });-->
+<!--}-->
+
+<!--function handleForgot() {-->
+<!--  const value = document.getElementById("forgotUsername").value.trim();-->
+
+<!--  if (!value) {-->
+<!--    forgotError.textContent = "Enter username or email";-->
+<!--    forgotError.classList.remove("hidden");-->
+<!--    return;-->
+<!--  }-->
+
+<!--  forgotError.classList.add("hidden");-->
+
+<!--  fetch("/forgot-password-ajax/", {-->
+<!--    method: "POST",-->
+<!--    headers: {-->
+<!--      "Content-Type": "application/x-www-form-urlencoded",-->
+<!--      "X-CSRFToken": getCookie("csrftoken")-->
+<!--    },-->
+<!--    body: new URLSearchParams({ username: value })-->
+<!--  })-->
+<!--  .then(res => res.json())-->
+<!--  .then(data => {-->
+<!--    if (data.success) {-->
+<!--      showSuccess(data.message);-->
+<!--    } else {-->
+<!--      forgotError.textContent = data.error;-->
+<!--      forgotError.classList.remove("hidden");-->
+<!--    }-->
+<!--  })-->
+<!--  .catch(() => {-->
+<!--    forgotError.textContent = "Server error. Try again.";-->
+<!--    forgotError.classList.remove("hidden");-->
+<!--  });-->
+<!--}-->
+
+
+<!--/* ======================================================-->
+<!--   CSRF HELPER (REQUIRED)-->
+<!--===================================================== */-->
+<!--function getCookie(name) {-->
+<!--  let cookieValue = null;-->
+<!--  if (document.cookie && document.cookie !== "") {-->
+<!--    const cookies = document.cookie.split(";");-->
+<!--    for (let cookie of cookies) {-->
+<!--      cookie = cookie.trim();-->
+<!--      if (cookie.startsWith(name + "=")) {-->
+<!--        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));-->
+<!--        break;-->
+<!--      }-->
+<!--    }-->
+<!--  }-->
+<!--  return cookieValue;-->
+<!--}-->
+
+<!--/* ======================================================-->
+<!--   SUCCESS / FAIL ANIMATION-->
+<!--===================================================== */-->
+<!--function resetAnimations() {-->
+<!--  spinner.classList.remove("hidden");-->
+<!--  check.classList.add("hidden");-->
+<!--  cross.classList.add("hidden");-->
+<!--  pulse.classList.add("hidden");-->
+<!--  textSuccess.classList.add("hidden");-->
+<!--  textFail.classList.add("hidden");-->
+<!--}-->
+
+<!--function showSuccess(msg) {-->
+<!--  resetAnimations();-->
+<!--  layer.classList.remove("hidden");-->
+
+<!--  textSuccess.textContent = msg;-->
+<!--  textSuccess.classList.remove("hidden");-->
+
+<!--  setTimeout(() => {-->
+<!--    spinner.classList.add("hidden");-->
+<!--    check.classList.remove("hidden");-->
+<!--    pulse.classList.remove("hidden");-->
+
+<!--    setTimeout(() => {-->
+<!--      layer.classList.add("hidden");-->
+<!--      closeAllModals();-->
+<!--    }, 1200);-->
+<!--  }, 600);-->
+<!--}-->
+
+<!--function showFail(msg) {-->
+<!--  resetAnimations();-->
+<!--  layer.classList.remove("hidden");-->
+
+<!--  spinner.classList.add("hidden");-->
+<!--  cross.classList.remove("hidden");-->
+<!--  textFail.textContent = msg;-->
+<!--  textFail.classList.remove("hidden");-->
+
+<!--  setTimeout(() => layer.classList.add("hidden"), 1200);-->
+<!--}-->
+
+
+<!--</script>-->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="ig-heart" viewBox="0 0 24 24">
+    <path
+      d="M12.1 21.35l-1.1-1.02C5.14 15.24 2 12.39 2 8.5
+         2 5.42 4.42 3 7.5 3
+         9.24 3 10.91 3.81 12 5.08
+         13.09 3.81 14.76 3 16.5 3
+         19.58 3 22 5.42 22 8.5
+         22 12.39 18.86 15.24 13
+         20.34l-.9 1.01z"
+      fill="currentColor"
+    />
+  </symbol>
+</svg>
+
+</body>
+</html>

@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axelit – Profile</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            axel: "#8b7cf6",
+            axelSoft: "#ebe9fe"
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-gray-50 text-gray-800 dark:bg-zinc-900 dark:text-gray-200 transition">
+
+<!-- ================= TOPBAR ================= -->
+<header class="fixed top-0 inset-x-0 z-50 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/10">
+  <div class="h-16 px-6 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <button id="menuBtn" class="lg:hidden text-xl"><i class="ph ph-list"></i></button>
+      <h1 class="text-xl font-extrabold text-axel">AXELIT</h1>
+    </div>
+    <button id="themeBtn" class="text-xl"><i class="ph ph-sun"></i></button>
+  </div>
+</header>
+
+<!-- ================= LAYOUT ================= -->
+<div class="pt-20 max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-[260px_1fr_340px] gap-6">
+
+<aside id="sidebar"
+  class="fixed lg:sticky top-0 left-0 w-64
+         bg-white dark:bg-zinc-800
+         h-screen flex flex-col p-5 z-40
+         rounded-xl transition transform -translate-x-full lg:translate-x-0">
+
+  <!-- NAVIGATION -->
+  <nav class="flex-1 overflow-y-auto space-y-3 text-sm">
+    <a class="flex items-center gap-3 bg-axelSoft text-axel px-4 py-2 rounded-xl font-semibold" id="returnHome">
+      <i class="ph ph-user"></i> Dashboard
+    </a>
+
+    <a id="openCategoryModal" class="flex items-center gap-3 px-4 py-2 cursor-pointer">
+      <i class="ph ph-chart-line"></i> Category
+    </a>
+
+    <a id="newsLink" class="flex items-center gap-3 px-4 py-2 cursor-pointer">
+      <i class="ph ph-chart-line"></i> News
+    </a>
+
+<!--    <a id="blogLink" class="flex items-center gap-3 px-4 py-2 cursor-pointer">-->
+<!--      <i class="ph ph-chart-line"></i> Blogs-->
+<!--    </a>-->
+
+    <a id="storyLink" class="flex items-center gap-3 px-4 py-2 cursor-pointer">
+      <i class="ph ph-chart-line"></i> Stories
+    </a>
+
+    <a class="flex items-center gap-3 px-4 py-2 cursor-pointer">
+      <i class="ph ph-chart-line"></i> Likes
+    </a>
+
+    <a class="flex items-center gap-3 px-4 py-2 cursor-pointer">
+      <i class="ph ph-chart-line"></i> Notifications
+    </a>
+
+    <a class="flex items-center gap-3 px-4 py-2 cursor-pointer">
+      <i class="ph ph-chart-line"></i> Users
+    </a>
+
+    <button id="addPostBtn"
+      class="flex items-center gap-2 px-4 py-2 rounded-full bg-axel text-white text-sm font-semibold">
+      <i class="ph ph-plus-circle text-lg"></i> Add Post
+    </button>
+  </nav>
+
+  <!-- LOGOUT AT BOTTOM -->
+  <div class="mt-auto border-t border-gray-200 dark:border-zinc-700 pt-4">
+    <a href="{% url 'logout' %}"
+       class="flex items-center gap-2 px-4 py-2 rounded-full
+              bg-red-600 hover:bg-red-700
+              text-white text-sm font-semibold justify-center">
+      <i class="ph ph-sign-out text-lg"></i> Logout
+    </a>
+  </div>
+
+</aside>
+
+<!-- ================= CONTENT AREA ================= -->
+<div id="contentArea" class="contents">
+
+<main class="space-y-6">
+  <div>
+    <h2 class="text-2xl font-bold">Profile</h2>
+    <p class="text-sm text-gray-500">Apps / Profile / Profile</p>
+  </div>
+
+  <section class="bg-white dark:bg-zinc-800 rounded-2xl p-5 shadow">
+  <h3 class="font-semibold mb-4">Featured Stories</h3>
+
+  <!-- Horizontal scroll container -->
+  <div id="featuredStories" class="flex gap-4 overflow-x-auto scrollbar-hide">
+    <!-- Story items will be injected here -->
+  </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("featuredStories");
+
+  const stories = [
+    {% for story in stories %}
+      {
+        id: {{ story.id }},
+        link: "{% if story.link %}{{ story.link|escapejs }}{% else %}{% endif %}",
+        image: "{% if story.image %}{{ story.image.url|escapejs }}{% else %}{% endif %}",
+        video: "{% if story.video %}{{ story.video.url|escapejs }}{% else %}{% endif %}",
+        description: "{% if story.description %}{{ story.description|escapejs }}{% else %}{% endif %}"
+      }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  stories.forEach(story => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex-shrink-0 cursor-pointer relative";
+
+    if (story.image) {
+      const img = document.createElement("img");
+      img.src = story.image;
+      img.alt = story.description || `Story ${story.id}`;
+      img.className = "w-20 h-28 rounded-xl ring-2 ring-axel object-cover";
+      wrapper.appendChild(img);
+    } else if (story.video) {
+      const video = document.createElement("video");
+      video.src = story.video;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.className = "w-20 h-28 rounded-xl ring-2 ring-axel object-cover";
+      wrapper.appendChild(video);
+    }
+
+    if (story.link) {
+      wrapper.addEventListener("click", () => window.open(story.link, "_blank"));
+    }
+
+    container.appendChild(wrapper);
+  });
+});
+</script>
+
+
+  <section class="bg-white dark:bg-zinc-800 rounded-2xl p-5 shadow">
+    <h3 class="font-semibold mb-4">Post</h3>
+   <div class="grid grid-cols-3 gap-3">
+  {% for post in news_posts %}
+
+    {% if post.image %}
+      <img
+        src="{{ post.image.url }}"
+        alt="{{ post.title }}"
+        class="rounded-xl object-cover w-full h-40"
+      >
+
+    {% elif post.video %}
+      <video
+        src="{{ post.video.url }}"
+        class="rounded-xl w-full h-40 object-cover"
+        muted
+        autoplay
+        loop
+      ></video>
+    {% endif %}
+
+  {% empty %}
+    <p class="col-span-3 text-center text-gray-400">
+      No posts available
+    </p>
+  {% endfor %}
+</div>
+
+  </section>
+
+
+</main>
+
+<aside class="bg-white dark:bg-zinc-800 rounded-2xl shadow p-6 text-center">
+
+  <!-- Letter Avatar -->
+  <div class="w-24 h-24 mx-auto rounded-full bg-indigo-600
+              flex items-center justify-center
+              text-white text-4xl font-bold mb-3">
+    {{ request.user.username|first|upper }}
+  </div>
+
+  <h3 class="font-bold">
+    {{ request.user.username }}
+  </h3>
+
+  <p class="text-sm text-gray-500">
+    Super Admin
+  </p>
+
+</aside>
+
+
+</div>
+
+<!-- ================= NEWS GALLERY ================= -->
+<section id="newsGallery" class="hidden lg:col-span-2 space-y-4">
+
+  <!-- TOOLBAR -->
+  <div id="newsToolbar"
+       class="hidden fixed bottom-4 left-1/2 -translate-x-1/2
+              z-50 w-[calc(100%-2rem)] max-w-xl
+              bg-white dark:bg-zinc-800
+              rounded-2xl shadow-lg
+              px-5 py-4
+              flex items-center justify-between">
+
+    <span id="selectedCount" class="font-semibold">0 selected</span>
+
+    <div class="flex gap-2 items-center">
+      <button type="button" id="selectAllNews"
+              class="bg-gray-100 dark:bg-zinc-700 px-4 py-2 rounded-xl font-medium">
+        Select All
+      </button>
+
+      <form method="POST" id="deleteNewsForm" action="{% url 'delete-news' %}" class="flex gap-2 items-center">
+        {% csrf_token %}
+        <input type="hidden" name="ids" id="newsDeleteIds">
+        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl">
+          Delete
+        </button>
+      </form>
+
+      <button type="button" id="closeSelect"
+              class="bg-gray-200 dark:bg-zinc-700 px-3 py-2 rounded-xl">✕</button>
+    </div>
+  </div>
+
+  <h2 class="text-2xl font-bold">Latest News</h2>
+
+  <div id="newsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+    {% for post in news_posts %}
+    <article data-id="{{ post.id }}" data-category-id="{{ post.category.id }}"
+             class="relative bg-white dark:bg-zinc-800 rounded-xl shadow overflow-hidden">
+
+      <!-- Checkbox -->
+      <input type="checkbox" class="selectCard absolute top-3 left-3 w-5 h-5 z-10">
+
+      <!-- Edit Button -->
+      <button type="button" class="editBtn absolute top-3 right-3 z-10
+                     bg-white/90 dark:bg-zinc-900/80
+                     p-2 rounded-full shadow">
+        <i class="ph ph-pencil-simple"></i>
+      </button>
+
+      <!-- Media -->
+      {% if post.image %}
+        <img src="{{ post.image.url }}" class="w-full h-40 object-cover post-media">
+      {% elif post.video %}
+        <video src="{{ post.video.url }}" controls class="w-full h-40 object-cover post-media"></video>
+      {% endif %}
+
+      <div class="p-4 space-y-1">
+        <span class="text-xs text-axel font-semibold post-category">{{ post.category.name }}</span>
+        <h3 class="font-semibold text-sm post-title">{{ post.title }}</h3>
+        <p class="text-xs text-gray-500 post-description">{{ post.description }}</p>
+      </div>
+    </article>
+    {% empty %}
+      <p class="text-center text-gray-400 col-span-3">No news posts found.</p>
+    {% endfor %}
+
+  </div>
+</section>
+   <!-- ================= BLOGS GALLERY ================= -->
+<section id="blogsGallery" class="hidden lg:col-span-2 space-y-4">
+
+  <!-- BLOG TOOLBAR -->
+  <div id="blogsToolbar"
+    class="hidden fixed bottom-4 left-1/2 -translate-x-1/2
+           z-50 w-[calc(100%-2rem)] max-w-xl
+           bg-white dark:bg-zinc-800
+           rounded-2xl shadow-lg
+           px-5 py-4
+           flex items-center justify-between">
+
+    <span id="blogsSelectedCount" class="font-semibold">0 selected</span>
+
+    <div class="flex gap-2">
+      <button id="selectAllBlogs"
+        class="bg-gray-100 dark:bg-zinc-700 px-4 py-2 rounded-xl font-medium">
+        Select All
+      </button>
+
+      <button id="deleteBlogs"
+        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl">
+        Delete
+      </button>
+
+      <button id="closeBlogsSelect"
+        class="bg-gray-200 dark:bg-zinc-700 px-3 py-2 rounded-xl">
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <h2 class="text-2xl font-bold">Latest Blogs</h2>
+
+  <div id="blogsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+</section>
+
+        <!-- ================= BLOGS GALLERY ================= -->
+<section id="storyGallery" class="hidden lg:col-span-2 space-y-4">
+
+  <!-- STORY TOOLBAR -->
+  <div id="storyToolbar"
+       class="hidden fixed bottom-4 left-1/2 -translate-x-1/2
+              z-50 w-[calc(100%-2rem)] max-w-xl
+              bg-white dark:bg-zinc-800
+              rounded-2xl shadow-lg
+              px-5 py-4
+              flex items-center justify-between">
+
+    <span id="storySelectedCount" class="font-semibold">0 selected</span>
+
+    <div class="flex gap-2">
+      <button id="selectAllStory"
+              class="bg-gray-100 dark:bg-zinc-700 px-4 py-2 rounded-xl font-medium">
+        Select All
+      </button>
+
+
+    <!-- Hidden Delete Form for Stories -->
+<form method="POST" id="deleteStoryForm" action="{% url 'delete-story' %}" class="flex gap-2 items-center">
+  {% csrf_token %}
+  <input type="hidden" name="ids" id="storyDeleteIds">
+  <button type="submit" id="deletestory"
+          class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl">
+    Delete
+  </button>
+</form>
+
+
+
+      <button id="closeStorySelect"
+              class="bg-gray-200 dark:bg-zinc-700 px-3 py-2 rounded-xl">
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <div class="flex justify-between items-center">
+    <h2 class="text-2xl font-bold">Latest Stories</h2>
+
+    <button id="openStoryModal"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl
+                   bg-axel text-white font-semibold">
+      <i class="ph ph-plus-circle"></i> Add Story
+    </button>
+  </div>
+
+  <div id="storyGrid" class="grid grid-cols-3 gap-4">
+    {% for story in stories %}
+    <article data-id="{{ story.id }}"
+             class="relative bg-white dark:bg-zinc-800 rounded-xl shadow overflow-hidden">
+
+      <!-- Checkbox -->
+      <input type="checkbox"
+             class="selectCard absolute top-3 left-3 w-5 h-5 z-10">
+
+      <!-- Edit Button -->
+      <button type="button"
+              class="editBtn absolute top-3 right-3 z-10
+                     bg-white/90 dark:bg-zinc-900/80 p-2 rounded-full shadow">
+        <i class="ph ph-pencil-simple"></i>
+      </button>
+
+      <!-- Media -->
+      {% if story.image %}
+        <img src="{{ story.image.url }}" class="w-full h-40 object-cover">
+      {% elif story.video %}
+        <video class="w-full h-40 object-cover" muted>
+          <source src="{{ story.video.url }}">
+        </video>
+      {% endif %}
+
+      <div class="p-4 space-y-1">
+        <span class="text-xs text-axel font-semibold">Story</span>
+
+        <!-- Used by Edit Modal -->
+        <h3 class="font-semibold text-sm">
+          {{ story.link|default:"No link" }}
+        </h3>
+
+        <p class="text-xs text-gray-500">
+          {{ story.description }}
+        </p>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+</section>
+
+
+</div>
+
+<div id="storyModal"
+  class="fixed inset-0 z-[999] hidden bg-black/50 flex items-center justify-center">
+
+  <div class="bg-white dark:bg-zinc-900 rounded-2xl
+              w-full max-w-md p-6 flex flex-col gap-4">
+
+    <div class="flex justify-between items-center">
+      <h3 class="text-lg font-bold">Add Story</h3>
+      <button id="closeStoryModal" class="text-xl">&times;</button>
+    </div>
+
+      <form method="POST"
+      enctype="multipart/form-data"
+      class="bg-white dark:bg-zinc-900 rounded-2xl
+             w-full max-w-md p-6 flex flex-col gap-4">
+
+  {% csrf_token %}
+  <input type="hidden" name="action" value="add_story">
+
+
+
+  <input name="link"
+         type="text"
+         placeholder="Optional link"
+         class="px-4 py-2 rounded-xl bg-gray-100 dark:bg-zinc-800">
+
+  <textarea name="description"
+            rows="3"
+            placeholder="Description (optional)"
+            class="px-4 py-2 rounded-xl bg-gray-100 dark:bg-zinc-800"></textarea>
+
+<label class="flex flex-col items-center justify-center
+              h-40 border-2 border-dashed rounded-xl cursor-pointer
+              border-gray-300 dark:border-white/20
+              hover:border-axel transition">
+
+  <i class="ph ph-upload-simple text-3xl mb-2"></i>
+
+  <!-- TEXT THAT WILL CHANGE -->
+  <span id="mediaText" class="text-sm">
+    Upload image or video
+  </span>
+
+  <input
+    id="mediaInput"
+    name="media"
+    type="file"
+    accept="image/*,video/*"
+    class="hidden">
+</label>
+
+  <button type="submit"
+          class="mt-2 px-4 py-2 rounded-xl bg-axel text-white font-semibold">
+    Add Story
+  </button>
+</form>
+
+
+
+  </div>
+</div>
+
+<script>
+/* ================= STORY MODAL ================= */
+const openStoryModal = document.getElementById("openStoryModal");
+const storyModal = document.getElementById("storyModal");
+const closeStoryModal = document.getElementById("closeStoryModal");
+
+const storyLinkInput = document.getElementById("storyLinkInput");
+const storyDescInput = document.getElementById("storyDescInput");
+const storyMediaInput = document.getElementById("storyMediaInput");
+const addStoryBtn = document.getElementById("addStoryBtn");
+
+openStoryModal?.addEventListener("click", () => {
+  storyModal.classList.remove("hidden");
+  document.body.classList.add("overflow-hidden");
+});
+
+closeStoryModal?.addEventListener("click", closeStory);
+
+storyModal.addEventListener("click", e => {
+  if (e.target === storyModal) closeStory();
+});
+
+function closeStory() {
+  storyModal.classList.add("hidden");
+  document.body.classList.remove("overflow-hidden");
+  storyLinkInput.value = "";
+  storyDescInput.value = "";
+  storyMediaInput.value = "";
+}
+
+
+</script>
+<script>
+  const mediaInput = document.getElementById("mediaInput");
+  const mediaText = document.getElementById("mediaText");
+
+  mediaInput.addEventListener("change", function () {
+    if (!this.files || !this.files[0]) {
+      mediaText.textContent = "Upload image or video";
+      return;
+    }
+
+    const file = this.files[0];
+
+    if (file.type.startsWith("image")) {
+      mediaText.textContent = "One image selected";
+    } else if (file.type.startsWith("video")) {
+      mediaText.textContent = "One video selected";
+    } else {
+      mediaText.textContent = "Unsupported file selected";
+    }
+  });
+</script>
+
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="fixed inset-0 hidden z-[999] bg-black/50 flex items-center justify-center">
+  <div class="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-xl p-6 relative space-y-3">
+    <!-- HEADER -->
+    <div class="flex justify-between items-center">
+      <h3 class="font-bold text-lg">Edit News</h3>
+      <button id="closeEdit" class="text-xl">&times;</button>
+    </div>
+
+    <!-- EDIT FORM -->
+    <form id="editNewsForm" method="POST"  enctype="multipart/form-data" class="space-y-3">
+      {% csrf_token %}
+      <input type="hidden" name="post_id" id="editNewsId">
+
+      <!-- TITLE -->
+      <input
+        type="text"
+        name="title"
+        id="editTitleInput"
+        class="w-full px-4 py-2 rounded-xl bg-gray-100 dark:bg-zinc-800"
+        placeholder="Headline"
+      >
+
+      <!-- CATEGORY -->
+      <select
+        name="category"
+        id="editCategoryInput"
+        class="w-full px-4 py-2 rounded-xl bg-gray-100 dark:bg-zinc-800"
+      >
+        {% for category in categories %}
+          <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- DESCRIPTION -->
+      <textarea
+        name="description"
+        id="editDescInput"
+        rows="3"
+        class="w-full px-4 py-2 rounded-xl bg-gray-100 dark:bg-zinc-800"
+        placeholder="Description"
+      ></textarea>
+
+      <!-- MEDIA PREVIEW -->
+      <div id="mediaPreview" class="space-y-2">
+        <img id="editImagePreview" class="w-full h-40 object-cover hidden rounded-xl" />
+        <video id="editVideoPreview" class="w-full h-40 object-cover hidden rounded-xl" controls></video>
+      </div>
+
+      <!-- SINGLE FILE INPUT FOR IMAGE OR VIDEO -->
+      <input
+        type="file"
+        name="media"
+        id="editMediaInput"
+        accept="image/*,video/*"
+        class="w-full"
+      >
+
+
+      <!-- UPDATE BUTTON -->
+      <button
+        type="submit"
+        class="w-full px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+      >Update</button>
+    </form>
+  </div>
+</div>
+
+
+<div id="addPostPage"
+  class="fixed inset-0 z-[999] hidden
+         bg-white dark:bg-zinc-900
+         overflow-y-auto transition">
+
+  <!-- Header -->
+  <div class="sticky top-0 bg-white dark:bg-zinc-900
+              border-b border-gray-200 dark:border-white/10
+              px-6 py-4 flex items-center justify-between">
+    <h2 class="text-xl font-bold">Create New Post</h2>
+    <button id="closeAddPost" class="text-2xl">
+      <i class="ph ph-x"></i>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <div class="max-w-3xl mx-auto px-6 py-8">
+    <form
+      method="POST"
+      action="{% url 'add-post' %}"
+      enctype="multipart/form-data"
+      class="space-y-6">
+
+      {% csrf_token %}
+
+      <!-- Title + Category -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Title -->
+        <div>
+          <label class="block text-sm font-medium mb-1">Post Title</label>
+          <input
+            type="text"
+            name="title"
+            placeholder="Enter post title"
+            required
+            class="w-full px-4 py-3 rounded-xl
+                   bg-gray-100 dark:bg-zinc-800
+                   border border-gray-300 dark:border-white/10
+                   outline-none focus:ring-2 focus:ring-axel">
+        </div>
+
+        <!-- Category -->
+<div class="relative">
+  <label class="block text-sm font-medium mb-1">Category</label>
+
+  <!-- Dropdown button -->
+  <button
+    id="categoryBtn"
+    type="button"
+    class="w-full px-4 py-3 rounded-xl text-left
+           bg-gray-100 dark:bg-zinc-800
+           border border-gray-300 dark:border-white/10
+           flex items-center justify-between
+           focus:ring-2 focus:ring-axel">
+
+    <span id="categoryValue">Select category</span>
+    <i class="ph ph-caret-down"></i>
+  </button>
+
+  <!-- Dropdown menu -->
+  <div
+    id="categoryMenu"
+    class="hidden absolute z-50 mt-2 w-full
+           bg-white dark:bg-zinc-800
+           border border-gray-200 dark:border-white/10
+           rounded-xl shadow-lg overflow-hidden">
+
+    {% for cat in categories %}
+      <button
+        type="button"
+        data-id="{{ cat.id }}"
+        class="categoryItem w-full px-4 py-2 text-left
+               hover:bg-gray-100 dark:hover:bg-zinc-700">
+        {{ cat.name }}
+      </button>
+    {% endfor %}
+  </div>
+
+  <!-- Hidden input sent to Django -->
+  <input type="hidden" name="category" id="categoryInput" required>
+</div>
+
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-sm font-medium mb-1">Description</label>
+        <textarea
+          name="description"
+          rows="4"
+          placeholder="Write something..."
+          class="w-full px-4 py-3 rounded-xl
+                 bg-gray-100 dark:bg-zinc-800
+                 border border-gray-300 dark:border-white/10
+                 outline-none focus:ring-2 focus:ring-axel"></textarea>
+      </div>
+
+      <!-- Media Upload -->
+      <div>
+        <label class="block text-sm font-medium mb-2">Upload Media</label>
+        <label
+          class="flex flex-col items-center justify-center
+                 h-40 border-2 border-dashed rounded-xl
+                 cursor-pointer
+                 border-gray-300 dark:border-white/20
+                 hover:border-axel transition">
+
+          <i class="ph ph-upload-simple text-3xl mb-2"></i>
+          <span id="mediaText" class="text-sm">
+            Click to upload image or video
+          </span>
+
+          <input
+            id="mediaInput"
+            type="file"
+            name="media"
+            accept="image/*,video/*"
+            class="hidden">
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-3 pt-4">
+        <button type="button" id="cancelAddPost"
+          class="px-6 py-2 rounded-xl
+                 bg-gray-200 dark:bg-zinc-700">
+          Cancel
+        </button>
+
+        <button type="submit"
+          class="px-6 py-2 rounded-xl
+                 bg-axel text-white font-semibold">
+          Publish
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* ======= NAV ======= */
+  const contentArea = document.getElementById("contentArea");
+  const newsGallery = document.getElementById("newsGallery");
+  const blogsGallery = document.getElementById("blogsGallery");
+  const storyGallery = document.getElementById("storyGallery");
+  const newsLink = document.getElementById("newsLink");
+  const blogLink = document.getElementById("blogLink");
+  const storyLink = document.getElementById("storyLink");
+  const returnHome = document.getElementById("returnHome");
+
+  function hideAllSections() {
+    contentArea?.classList.add("hidden");
+    newsGallery?.classList.add("hidden");
+    blogsGallery?.classList.add("hidden");
+    storyGallery?.classList.add("hidden");
+  }
+
+  newsLink?.addEventListener("click", () => { hideAllSections(); newsGallery.classList.remove("hidden"); });
+  blogLink?.addEventListener("click", () => { hideAllSections(); blogsGallery.classList.remove("hidden"); });
+  storyLink?.addEventListener("click", () => { hideAllSections(); storyGallery.classList.remove("hidden"); });
+  returnHome?.addEventListener("click", () => { hideAllSections(); contentArea.classList.remove("hidden"); });
+
+  /* ======= EDIT MODAL ======= */
+  const editModal = document.getElementById("editModal");
+  const closeEdit = document.getElementById("closeEdit");
+  const editNewsForm = document.getElementById("editNewsForm");
+  const editNewsId = document.getElementById("editNewsId");
+  const editTitleInput = document.getElementById("editTitleInput");
+  const editCategoryInput = document.getElementById("editCategoryInput");
+  const editDescInput = document.getElementById("editDescInput");
+  const editMediaInput = document.getElementById("editMediaInput");
+  const editImagePreview = document.getElementById("editImagePreview");
+  const editVideoPreview = document.getElementById("editVideoPreview");
+  const errorMsg = document.getElementById("editErrorMsg");
+  const newsGrid = document.getElementById("newsGrid");
+
+  function getCSRFToken() {
+    return document.cookie.split("; ").find(row => row.startsWith("csrftoken="))?.split("=")[1];
+  }
+
+  function attachEdit(grid) {
+    if (!grid) return;
+    grid.querySelectorAll(".editBtn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const card = btn.closest("article");
+        if (!card) return;
+        editNewsId.value = card.dataset.id;
+        editTitleInput.value = card.querySelector(".post-title")?.textContent.trim() || "";
+        editDescInput.value = card.querySelector(".post-description")?.textContent.trim() || "";
+        editCategoryInput.value = card.dataset.categoryId || "";
+        editImagePreview.classList.add("hidden");
+        editVideoPreview.classList.add("hidden");
+        const img = card.querySelector("img");
+        const video = card.querySelector("video");
+        if (img) editImagePreview.src = img.src; editImagePreview.classList.remove("hidden");
+        if (video) editVideoPreview.src = video.src; editVideoPreview.classList.remove("hidden");
+        editMediaInput.value = "";
+        if (errorMsg) errorMsg.textContent = "";
+        editModal.classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+      });
+    });
+  }
+
+  editNewsForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const newsId = editNewsId.value;
+    const card = document.querySelector(`article[data-id="${newsId}"]`);
+    const formData = new FormData(editNewsForm);
+    try {
+      const response = await fetch(`/news/edit/${newsId}/`, {
+        method: "POST",
+        body: formData,
+        headers: { "X-CSRFToken": getCSRFToken() },
+        credentials: "same-origin"
+      });
+      const contentType = response.headers.get("content-type");
+      let data;
+      if (contentType && contentType.includes("application/json")) data = await response.json();
+      else { const text = await response.text(); throw new Error(text); }
+
+      if (!response.ok) { if (errorMsg) errorMsg.textContent = data.error || "Failed to update"; return; }
+
+      card.querySelector(".post-title").textContent = data.title;
+      card.querySelector(".post-description").textContent = data.description;
+
+      const oldImg = card.querySelector("img");
+      const oldVideo = card.querySelector("video");
+      if (data.media_type === "image") {
+        const img = document.createElement("img");
+        img.src = data.media_url + "?t=" + new Date().getTime();
+        img.className = "post-media";
+        if (oldImg) oldImg.replaceWith(img); else if (oldVideo) oldVideo.replaceWith(img); else card.insertBefore(img, card.firstChild);
+      } else if (data.media_type === "video") {
+        const video = document.createElement("video");
+        video.src = data.media_url + "?t=" + new Date().getTime();
+        video.controls = true;
+        video.className = "post-media";
+        if (oldVideo) oldVideo.replaceWith(video); else if (oldImg) oldImg.replaceWith(video); else card.insertBefore(video, card.firstChild);
+      } else { if (oldImg) oldImg.remove(); if (oldVideo) oldVideo.remove(); }
+
+      editModal.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+    } catch (err) { console.error(err); if (errorMsg) errorMsg.textContent = "Unexpected error"; }
+  });
+
+  closeEdit?.addEventListener("click", () => { editModal.classList.add("hidden"); document.body.classList.remove("overflow-hidden"); if (errorMsg) errorMsg.textContent = ""; });
+  attachEdit(newsGrid);
+
+  /* ======= NEWS DELETE TOOLBAR ======= */
+  const newsToolbar = document.getElementById("newsToolbar");
+  const selectAllNewsBtn = document.getElementById("selectAllNews");
+  const closeNewsBtn = document.getElementById("closeSelect");
+  const deleteNewsForm = document.getElementById("deleteNewsForm");
+  const newsDeleteIds = document.getElementById("newsDeleteIds");
+  const newsCheckboxes = () => newsGrid.querySelectorAll(".selectCard");
+
+  function updateNewsToolbar() {
+    const checked = Array.from(newsCheckboxes()).filter(cb => cb.checked);
+    document.getElementById("selectedCount").textContent = `${checked.length} selected`;
+    if (checked.length > 0) newsToolbar.classList.remove("hidden"); else newsToolbar.classList.add("hidden");
+  }
+
+  newsGrid.addEventListener("change", e => { if (e.target.classList.contains("selectCard")) updateNewsToolbar(); });
+  selectAllNewsBtn.addEventListener("click", () => {
+    const all = newsCheckboxes();
+    const allChecked = Array.from(all).every(cb => cb.checked);
+    all.forEach(cb => cb.checked = !allChecked);
+    updateNewsToolbar();
+  });
+  closeNewsBtn.addEventListener("click", () => { Array.from(newsCheckboxes()).forEach(cb => cb.checked = false); updateNewsToolbar(); });
+  deleteNewsForm.addEventListener("submit", e => {
+    const checkedIds = Array.from(newsCheckboxes()).filter(cb => cb.checked).map(cb => cb.closest("article").dataset.id);
+    if (checkedIds.length === 0) { e.preventDefault(); alert("Select at least one post"); return; }
+    newsDeleteIds.value = checkedIds.join(",");
+  });
+
+  /* ======= STORY DELETE TOOLBAR ======= */
+  const storyGrid = document.getElementById("storyGrid");
+  const storyToolbar = document.getElementById("storyToolbar");
+  const selectAllStoryBtn = document.getElementById("selectAllStory");
+  const closeStoryBtn = document.getElementById("closeStorySelect");
+  const deleteStoryForm = document.getElementById("deleteStoryForm");
+  const storyDeleteIds = document.getElementById("storyDeleteIds");
+  const storyCheckboxes = () => storyGrid.querySelectorAll(".selectCard");
+
+  function updateStoryToolbar() {
+    const checked = Array.from(storyCheckboxes()).filter(cb => cb.checked);
+    document.getElementById("storySelectedCount").textContent = `${checked.length} selected`;
+    if (checked.length > 0) storyToolbar.classList.remove("hidden"); else storyToolbar.classList.add("hidden");
+  }
+
+  storyGrid.addEventListener("change", e => { if (e.target.classList.contains("selectCard")) updateStoryToolbar(); });
+  selectAllStoryBtn.addEventListener("click", () => {
+    const all = storyCheckboxes();
+    const allChecked = Array.from(all).every(cb => cb.checked);
+    all.forEach(cb => cb.checked = !allChecked);
+    updateStoryToolbar();
+  });
+  closeStoryBtn.addEventListener("click", () => { Array.from(storyCheckboxes()).forEach(cb => cb.checked = false); updateStoryToolbar(); });
+  deleteStoryForm.addEventListener("submit", e => {
+    const checkedIds = Array.from(storyCheckboxes()).filter(cb => cb.checked).map(cb => cb.closest("article").dataset.id);
+    if (checkedIds.length === 0) { e.preventDefault(); alert("Select at least one story"); return; }
+    storyDeleteIds.value = checkedIds.join(",");
+  });
+
+});
+</script>
+
+
+
+
+
+<script>
+  const addPostBtn = document.getElementById("addPostBtn");
+  const addPostPage = document.getElementById("addPostPage");
+  const closeAddPost = document.getElementById("closeAddPost");
+  const cancelAddPost = document.getElementById("cancelAddPost");
+
+  addPostBtn?.addEventListener("click", () => {
+    addPostPage.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden");
+  });
+
+  function closePostPage() {
+    addPostPage.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden");
+  }
+
+  closeAddPost?.addEventListener("click", closePostPage);
+  cancelAddPost?.addEventListener("click", closePostPage);
+</script>
+<script>
+  const categoryBtn = document.getElementById("categoryBtn");
+  const categoryMenu = document.getElementById("categoryMenu");
+  const categoryValue = document.getElementById("categoryValue");
+  const categoryInput = document.getElementById("categoryInput");
+
+  categoryBtn.addEventListener("click", () => {
+    categoryMenu.classList.toggle("hidden");
+  });
+
+  document.querySelectorAll(".categoryItem").forEach(item => {
+    item.addEventListener("click", () => {
+      categoryValue.textContent = item.textContent.trim();
+      categoryInput.value = item.dataset.id; // numeric ID
+      categoryMenu.classList.add("hidden");
+    });
+  });
+</script>
+
+
+
+<!-- DELETE SUCCESS ANIMATION -->
+<div id="deleteToast" class="fixed inset-0 z-[999] flex items-center justify-center pointer-events-none opacity-0">
+  <!-- White background box -->
+  <div class="relative bg-white rounded-3xl w-64 h-64 shadow-xl flex items-center justify-center p-6">
+
+    <!-- Pulse circle behind tick -->
+    <div class="absolute w-40 h-40 bg-green-400/30 rounded-full animate-pulseOnce"></div>
+
+    <!-- Tick -->
+    <div id="checkCircle" class="absolute w-28 h-28 bg-green-400 rounded-full flex items-center justify-center scale-0">
+      <svg class="w-16 h-16 text-white stroke-[6] stroke-current fill-none" viewBox="0 0 24 24">
+        <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Sparkles -->
+    <div class="absolute w-4 h-4 bg-green-400 rounded-full top-3 left-1/4 animate-bounceOnce"></div>
+    <div class="absolute w-3 h-3 bg-green-400 rounded-full bottom-4 right-1/3 animate-bounceOnce delay-150"></div>
+    <div class="absolute w-3 h-3 bg-green-400 rounded-full top-1/3 right-4 animate-bounceOnce delay-300"></div>
+    <div class="absolute w-2 h-2 bg-green-400 rounded-full top-1/4 right-1/4 animate-bounceOnce delay-450"></div>
+  </div>
+</div>
+
+
+<div id="categoryModal"
+     class="fixed inset-0 z-[999] hidden bg-black/50 flex items-center justify-center">
+
+  <div class="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-md h-[400px] p-6 flex flex-col">
+
+    <h3 class="text-lg font-bold mb-4">Manage Categories</h3>
+
+    <!-- ADD CATEGORY -->
+    <form id="addCategoryForm" method="POST" action="{% url 'admin-dashboard' %}" class="mb-4 flex gap-2">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_category">
+      <input
+        id="newCategoryInput"
+        name="category_name"
+        type="text"
+        placeholder="Category name"
+        class="flex-1 px-3 py-2 rounded-xl bg-gray-100 dark:bg-zinc-800"
+        required>
+      <button type="submit" class="px-4 py-2 rounded-xl bg-axel text-white">Add</button>
+    </form>
+
+    <ul class="flex-1 overflow-y-auto space-y-2 border-t border-gray-200 pt-2">
+  {% for cat in categories %}
+    <li class="flex justify-between items-center bg-gray-100 dark:bg-zinc-800 px-3 py-2 rounded-xl">
+
+      <!-- Name Display -->
+      <span class="flex-1">{{ cat.name }}</span>
+
+      <!-- Edit/Delete Form -->
+      <div class="flex items-center gap-2">
+        <!-- Edit -->
+        <form method="POST" action="{% url 'admin-dashboard' %}" class="flex items-center gap-1">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="edit_category">
+          <input type="hidden" name="category_id" value="{{ cat.id }}">
+          <input type="text" name="category_name" value="{{ cat.name }}" class="px-2 py-1 rounded bg-gray-50 dark:bg-zinc-700 w-[100px]">
+          <button type="submit" class="text-blue-500 whitespace-nowrap">Save</button>
+        </form>
+
+        <!-- Delete -->
+        <form method="POST" action="{% url 'admin-dashboard' %}" onsubmit="return confirm('Delete this category?');">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="delete_category">
+          <input type="hidden" name="category_id" value="{{ cat.id }}">
+          <button type="submit" class="text-red-500 whitespace-nowrap">Delete</button>
+        </form>
+      </div>
+    </li>
+  {% empty %}
+    <li class="text-center text-gray-400">No categories</li>
+  {% endfor %}
+</ul>
+
+    <button id="closeCategoryModal" class="mt-4 w-full px-4 py-2 rounded-xl bg-gray-200 dark:bg-zinc-700">
+      Close
+    </button>
+  </div>
+</div>
+
+<div id="categoryToast"
+     class="fixed top-5 right-5 z-[999]
+            bg-green-600 text-white px-4 py-2 rounded-xl
+            opacity-0 transition">
+  ✔ Category updated
+</div>
+
+
+
+
+<script>
+const openCategoryModal = document.getElementById("openCategoryModal");
+const categoryModal = document.getElementById("categoryModal");
+const closeCategoryModal = document.getElementById("closeCategoryModal");
+
+openCategoryModal?.addEventListener("click", () => {
+  categoryModal.classList.remove("hidden");
+  document.body.classList.add("overflow-hidden");
+});
+
+closeCategoryModal?.addEventListener("click", () => {
+  categoryModal.classList.add("hidden");
+  document.body.classList.remove("overflow-hidden");
+});
+
+categoryModal.addEventListener("click", e => {
+  if (e.target === categoryModal) {
+    categoryModal.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden");
+  }
+});
+</script>
+
+
+
+
+
+<style>
+@keyframes bounceOnce {
+  0%,100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(-10px); opacity: 1; }
+}
+.animate-bounceOnce { animation: bounceOnce 1.5s forwards; }
+.delay-150 { animation-delay: 0.15s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-450 { animation-delay: 0.45s; }
+
+@keyframes scaleUp {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+.scale-animate { animation: scaleUp 1.5s forwards; }
+
+@keyframes pulseOnce {
+  0% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(2); opacity: 0.3; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+.animate-pulseOnce { animation: pulseOnce 1.5s forwards; }
+
+#deleteToast { transition: opacity 0.3s ease; }
+
+
+    /* Hide scrollbar but keep scroll */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+</style>
+
+<script>
+function showDeleteToast() {
+  const toast = document.getElementById("deleteToast");
+  const checkCircle = document.getElementById("checkCircle");
+
+  // show toast
+  toast.classList.remove("opacity-0");
+  toast.classList.add("opacity-100");
+
+  // animate tick
+  checkCircle.classList.add("scale-animate");
+
+  // hide after 2s
+  setTimeout(() => {
+    toast.classList.remove("opacity-100");
+    toast.classList.add("opacity-0");
+    checkCircle.classList.remove("scale-animate");
+
+    // reset sparkles & pulse
+    document.querySelectorAll("#deleteToast .animate-bounceOnce, #deleteToast .animate-pulseOnce")
+      .forEach(el => el.style.animation = "none");
+    void toast.offsetWidth; // force reflow
+    document.querySelectorAll("#deleteToast .animate-bounceOnce, #deleteToast .animate-pulseOnce")
+      .forEach(el => el.style.animation = "");
+  }, 2000);
+}
+</script>
+
+
+
+<script>
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+
+menuBtn?.addEventListener("click", () => {
+  sidebar.classList.toggle("-translate-x-full");
+});
+</script>
+<script>
+const themeBtn = document.getElementById("themeBtn");
+const html = document.documentElement;
+
+// Load saved theme
+if (localStorage.getItem("theme") === "dark") {
+  html.classList.add("dark");
+  themeBtn.innerHTML = '<i class="ph ph-moon"></i>';
+}
+
+// Toggle theme
+themeBtn?.addEventListener("click", () => {
+  html.classList.toggle("dark");
+
+  const isDark = html.classList.contains("dark");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
+
+  themeBtn.innerHTML = isDark
+    ? '<i class="ph ph-moon"></i>'
+    : '<i class="ph ph-sun"></i>';
+});
+</script>
+
+</body>
+</html>

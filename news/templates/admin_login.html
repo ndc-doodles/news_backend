@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      animation: {
+        hue: 'hue 6s linear infinite',
+      },
+      keyframes: {
+        hue: {
+          '0%': { filter: 'grayscale(30%) hue-rotate(0deg)' },
+          '100%': { filter: 'grayscale(30%) hue-rotate(360deg)' },
+        },
+      },
+    }
+  }
+}
+</script>
+</head>
+
+<body class="min-h-screen flex items-center justify-center font-sans overflow-hidden">
+
+<!-- BACKGROUND IMAGE -->
+<div
+  class="fixed inset-0 bg-cover bg-center animate-hue"
+  style="background-image: url('{% static "images/l1.jpg" %}')">
+</div>
+
+<!-- DARK OVERLAY -->
+<div class="fixed inset-0 bg-black/70"></div>
+
+<!-- LOGIN FORM -->
+<form
+  class="relative z-10 w-[90%] max-w-md
+         bg-black/40 backdrop-blur-md
+         border border-white/80
+         rounded-2xl
+         px-8 py-10
+         shadow-2xl" method="post">
+ {% csrf_token %}
+  <!-- ICON -->
+  <div class="flex justify-center mb-8">
+    <span class="fa-stack fa-2x text-white">
+      <i class="fa fa-circle fa-stack-2x"></i>
+      <i class="fa fa-lock fa-stack-1x text-black"></i>
+    </span>
+  </div>
+
+  <!-- EMAIL -->
+  <input
+    type="text"
+    placeholder="username"
+    required
+    autofocus
+    class="w-full mb-6
+           bg-transparent
+           border-b border-white/60
+           text-white placeholder-white/70
+           px-1 py-3
+           focus:outline-none
+           focus:bg-white
+           focus:text-black
+           transition rounded-md" name="username">
+
+  <!-- PASSWORD -->
+  <input
+    type="password"
+    placeholder="Password" name="password"
+    required
+    class="w-full mb-8
+           bg-transparent
+           border-b border-white/60
+           text-white placeholder-white/70
+           px-1 py-3
+           focus:outline-none
+           focus:bg-white
+           focus:text-black
+           transition rounded-md"/>
+
+
+
+
+
+  <!-- BUTTON -->
+  <button
+    type="submit"
+    class="w-full py-3
+           border border-white
+           rounded-xl
+           text-white uppercase tracking-widest
+           hover:bg-white hover:text-black
+           transition">
+    Login
+  </button>
+  {% for message in messages %}
+    <p style="color:red;">{{ message }}</p>
+{% endfor %}
+</form>
+
+</body>
+</html>

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<!-- ================= STORIES ================= -->
+<section class="mt-20 px-4 max-w-7xl mx-auto">
+  <div class="flex gap-3 overflow-x-auto scrollbar-hide py-2 flex-nowrap">
+    {% for story in stories %}
+    <div
+      class="story-card flex-shrink-0 w-[110px] h-[160px] rounded-xl p-[3px] cursor-pointer
+             bg-red-600 data-[viewed=true]:bg-gray-400"
+      data-viewed="false"
+      {% if story.image %} data-story="{{ story.image.url }}" data-type="image" {% elif story.video %} data-story="{{ story.video.url }}" data-type="video" {% endif %}
+    >
+      <div class="w-full h-full rounded-lg overflow-hidden relative bg-black">
+        {% if story.image %}
+        <img src="{{ story.image.url }}" class="w-full h-full object-cover block" />
+        {% elif story.video %}
+        <video class="w-full h-full object-cover block" muted>
+          <source src="{{ story.video.url }}">
+        </video>
+        {% endif %}
+
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1">
+          <span class="text-white text-[11px] font-medium">
+            {{ story.link|default:"Story" }}
+          </span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- STORY VIEWER -->
+<div id="storyViewer" class="fixed inset-0 bg-black z-50 hidden flex items-center justify-center">
+  <div id="prevStory" class="absolute left-0 top-0 w-1/3 h-full z-50 cursor-pointer"></div>
+  <div id="nextStory" class="absolute right-0 top-0 w-1/3 h-full z-50 cursor-pointer"></div>
+
+  <img id="storyImage" class="hidden max-w-full max-h-full object-contain z-40" />
+  <video id="storyVideo" class="hidden max-w-full max-h-full object-contain z-40" playsinline></video>
+
+  <div class="absolute top-0 left-0 right-0 h-1 bg-white/30 z-50">
+    <div id="progressBar" class="h-full bg-red-600 w-0"></div>
+  </div>
+
+  <div id="closeStory" class="absolute top-5 right-5 text-white text-2xl font-bold cursor-pointer z-50">✕</div>
+</div>
+
+<!-- ================= POST GRID ================= -->
+<div class="relative">
+  {% if posts.exists %}
+    <div
+  id="grid"
+  class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4
+         gap-[2px]
+         auto-rows-[180px] sm:auto-rows-[200px] md:auto-rows-[220px]
+         grid-flow-dense
+         px-2 pb-24 max-w-7xl mx-auto"
+>
+
+      {% for post in posts %}
+      <a href="{% url 'newsview' post.id %}"
+   class="card relative h-full w-full overflow-hidden group
+          {% if forloop.first %}
+            col-span-2 row-span-2
+          {% else %}
+            col-span-1 row-span-1
+          {% endif %}"
+   data-title="{{ post.title }}"
+   data-description="{{ post.description|default:'' }}"
+   data-category="{{ post.category.id }}"
+   data-media="{% if post.image %}Image{% elif post.video %}Video{% endif %}"
+   data-place="{{ post.location|default:'Unknown' }}"
+   data-date="{{ post.created_at|date:'Y-m-d' }}"
+>
+  {% if post.image %}
+    <img src="{{ post.image.url }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+  {% endif %}
+
+  {% if post.video %}
+    <video src="{{ post.video.url }}" class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline></video>
+    <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded z-10">▶</div>
+  {% endif %}
+
+  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+
+  <div class="absolute bottom-3 left-3 right-3 z-10 text-white text-sm md:text-base font-semibold leading-tight">
+    {{ post.title }}
+  </div>
+</a>
+
+        {% endfor %}
+    </div>
+
+    <!-- No results -->
+    <p id="noResults"
+       class="col-span-full flex items-center justify-center
+              text-center text-gray-400 text-lg font-semibold hidden py-24">
+      Sorry, nothing found
+    </p>
+
+  {% else %}
+    <p class="text-center text-gray-400 py-16 text-sm">No news found</p>
+  {% endif %}
+</div>
+
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+/* ---------------- STORIES ---------------- */
+const storyContainer = document.querySelector(".flex.gap-3.overflow-x-auto");
+const storyCards = Array.from(document.querySelectorAll(".story-card"));
+const storyViewer = document.getElementById("storyViewer");
+const storyImage = document.getElementById("storyImage");
+const storyVideo = document.getElementById("storyVideo");
+const progressBar = document.getElementById("progressBar");
+const closeStory = document.getElementById("closeStory");
+const nextStory = document.getElementById("nextStory");
+const prevStory = document.getElementById("prevStory");
+
+let currentIndex = 0;
+let progressInterval;
+
+function resetViewer() {
+  clearInterval(progressInterval);
+  progressBar.style.width = "0%";
+  storyImage.classList.add("hidden");
+  storyVideo.classList.add("hidden");
+  storyVideo.pause();
+  storyVideo.currentTime = 0;
+}
+
+function startProgress(duration) {
+  let progress = 0;
+  progressInterval = setInterval(() => {
+    progress += 1;
+    progressBar.style.width = progress + "%";
+    if (progress >= 100) {
+      clearInterval(progressInterval);
+      openStory(currentIndex + 1);
+    }
+  }, duration / 100);
+}
+
+function openStory(index) {
+  if (index < 0 || index >= storyCards.length) return closeViewer();
+
+  resetViewer();
+  currentIndex = index;
+
+  const card = storyCards[index];
+  const src = card.dataset.story;
+  const type = card.dataset.type;
+
+  storyViewer.classList.remove("hidden");
+
+  if (type === "image") {
+    storyImage.src = src;
+    storyImage.classList.remove("hidden");
+    startProgress(5000);
+  }
+
+  if (type === "video") {
+    storyVideo.src = src;
+    storyVideo.classList.remove("hidden");
+    storyVideo.play();
+    storyVideo.onloadedmetadata = () => startProgress(storyVideo.duration * 1000);
+  }
+
+  card.dataset.viewed = "true";
+  localStorage.setItem(`story_${index}`, "viewed");
+  storyContainer.appendChild(card);
+}
+
+function closeViewer() {
+  resetViewer();
+  storyViewer.classList.add("hidden");
+}
+
+storyCards.forEach((card, index) => {
+  if (localStorage.getItem(`story_${index}`) === "viewed") {
+    card.dataset.viewed = "true";
+    storyContainer.appendChild(card);
+  }
+  card.addEventListener("click", () => openStory(index));
+});
+
+nextStory.addEventListener("click", () => openStory(currentIndex + 1));
+prevStory.addEventListener("click", () => openStory(currentIndex - 1));
+closeStory.addEventListener("click", closeViewer);
+
+/* ---------------- FILTER GRID ---------------- */
+
+const cards = Array.from(document.querySelectorAll("#grid .card"));
+const noResults = document.getElementById("noResults");
+
+/* helper */
+function getValue(desktopId, drawerId) {
+  return (
+    document.getElementById(desktopId)?.value ||
+    document.getElementById(drawerId)?.value ||
+    ""
+  );
+}
+
+function filterGrid() {
+  const category = getValue("desktopCategory", "drawerCategory");
+  const media = getValue("desktopMedia", "drawerMedia");
+  const date = getValue("desktopDate", "drawerDate");
+
+  const search =
+    document.getElementById("desktopSearch")?.value.toLowerCase() ||
+    document.getElementById("drawerSearch")?.value.toLowerCase() ||
+    "";
+
+  let anyVisible = false;
+
+  cards.forEach(card => {
+    const title = card.dataset.title?.toLowerCase() || "";
+    const description = card.dataset.description?.toLowerCase() || "";
+
+    const matchCategory = !category || card.dataset.category === category;
+    const matchMedia = !media || card.dataset.media === media;
+    const matchDate = !date || card.dataset.date === date;
+    const matchSearch =
+      !search || title.includes(search) || description.includes(search);
+
+    if (matchCategory && matchMedia && matchDate && matchSearch) {
+      card.style.display = "block";
+      anyVisible = true;
+    } else {
+      card.style.display = "none";
+    }
+  });
+
+  if (noResults) {
+    noResults.style.display = anyVisible ? "none" : "flex";
+  }
+}
+
+/* filters (change) */
+document.querySelectorAll(".filter").forEach(el => {
+  el.addEventListener("change", filterGrid);
+});
+
+/* 🔍 live search (typing) */
+document
+  .querySelectorAll("#desktopSearch, #drawerSearch")
+  .forEach(input => {
+    input.addEventListener("input", filterGrid);
+  });
+
+/* initial load */
+window.addEventListener("DOMContentLoaded", filterGrid);
+
+</script>
+
+{% endblock %}

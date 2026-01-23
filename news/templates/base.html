@@ -1,0 +1,366 @@
+{% load static %}
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+<title>Explore</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+<!--   <link rel="stylesheet" href="assets/css/style.css">-->
+     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: { neon: '#00ffe1' }
+    }
+  }
+}
+</script>
+
+
+
+</head>
+
+<body class="overflow-x-hidden light">
+
+
+
+
+<!-- ================= NAVBAR ================= -->
+<nav class="fixed top-0 inset-x-0 z-50 border-b transition-colors duration-300 bg-transparent">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+
+    <h1 class="font-bold tracking-wide text-lg">EXPLORE</h1>
+
+    <div class="hidden md:flex flex-1 max-w-3xl mx-6">
+  <div class="flex w-full items-center gap-2 px-4 py-2 rounded-full border transition-colors duration-300">
+    <!-- Search -->
+    <input id="desktopSearch" name="search" value="{{ request.GET.search|default:'' }}" placeholder="Search…"
+           class="flex-1 bg-transparent text-sm outline-none transition-colors duration-300"/>
+
+    <!-- Category -->
+  <select id="desktopCategory" name="category" class="filter transition-colors duration-300">
+  <option value="">Categories</option>
+  {% for category in categories %}
+    <option value="{{ category.id }}"
+      {% if request.GET.category == category.id|stringformat:"s" %} selected {% endif %}>
+      {{ category.name }}
+    </option>
+  {% endfor %}
+</select>
+
+
+    <!-- Media -->
+    <select id="desktopMedia" name="media" class="filter transition-colors duration-300">
+      <option value="">Media</option>
+      <option value="Image" {% if request.GET.media == "Image" %} selected {% endif %}>Image</option>
+      <option value="Video" {% if request.GET.media == "Video" %} selected {% endif %}>Video</option>
+    </select>
+
+    <!-- Date -->
+    <input id="desktopDate" name="date" type="date" value="{{ request.GET.date|default:'' }}"
+           class="filter [color-scheme:dark] transition-colors duration-300" />
+  </div>
+</div>
+
+    <!-- THEME TOGGLE (DESKTOP ONLY) -->
+    <div class="hidden md:flex items-center">
+      <div class="toggle-button-container">
+        <div class="btn btn-pill" id="button-9">
+          <input type="checkbox" class="checkbox" id="themeToggle">
+          <div class="knob">
+            <i class="ph ph-sun icon-sun"></i>
+            <i class="ph ph-moon icon-moon"></i>
+            <span></span>
+          </div>
+          <div class="btn-bg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HAMBURGER TOGGLE -->
+    <button id="navToggle" class="text-2xl px-2 hover:text-neon transition select-none">☰</button>
+  </div>
+</nav>
+
+<!-- ================= DRAWER ================= -->
+<div id="navDrawer"
+     class="fixed top-0 right-0 z-50 h-screen w-full sm:w-[420px]
+            bg-zinc-900/95 backdrop-blur border-l border-white/10
+            transition-transform duration-300 ease-out
+            translate-x-full">
+
+  <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 transition-colors duration-300">
+    <h2 class="font-semibold text-lg">Filters</h2>
+    <button id="closeDrawer" class="text-2xl hover:text-neon">✕</button>
+  </div>
+
+  <div class="p-6 space-y-5 overflow-y-auto h-[calc(100vh-64px)]">
+    <input id="drawerSearch" placeholder="Search news, blogs, releases…" class="w-full text-sm px-4 py-3 rounded-full bg-transparent border border-gray-400 placeholder-gray-500 outline-none transition-colors duration-300 focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
+
+    <div class="space-y-3">
+     <!-- Category -->
+  <select id="drawerCategory" name="category" class="filter w-full">
+
+  <option value="">Categories</option>
+  {% for category in categories %}
+    <option value="{{ category.id }}"
+      {% if request.GET.category == category.id|stringformat:"s" %} selected {% endif %}>
+      {{ category.name }}
+    </option>
+  {% endfor %}
+</select>
+  <!-- Media -->
+  <select id="drawerMedia" name="media" class="filter w-full transition-colors duration-300">
+    <option value="">Media</option>
+    <option value="Image" {% if request.GET.media == "Image" %} selected {% endif %}>Image</option>
+    <option value="Video" {% if request.GET.media == "Video" %} selected {% endif %}>Video</option>
+  </select>
+
+  <!-- Date -->
+  <input id="drawerDate" name="date" type="date" value="{{ request.GET.date|default:'' }}"
+         class="filter w-full transition-colors duration-300">
+
+  <!-- Sorting -->
+  <select name="sort" class="filter w-full transition-colors duration-300">
+    <option value="latest" {% if request.GET.sort == "latest" or not request.GET.sort %} selected {% endif %}>Latest</option>
+    <option value="oldest" {% if request.GET.sort == "oldest" %} selected {% endif %}>Oldest</option>
+  </select>
+</div>
+
+    <button id="applyFiltersBtn" class="w-full py-3 rounded-xl bg-neon text-black font-semibold"
+        onclick="applyFilters()">
+  Apply Filters
+</button>
+    <!-- MOBILE THEME TOGGLE -->
+    <div class="md:hidden flex items-center justify-between w-full mt-4">
+      <span class="text-sm font-medium select-none">Theme</span>
+      <div class="toggle-button-container">
+        <div class="btn btn-pill" id="button-9-mobile">
+          <input type="checkbox" class="checkbox" id="themeToggleMobile">
+          <div class="knob">
+            <i class="ph ph-sun icon-sun"></i>
+            <i class="ph ph-moon icon-moon"></i>
+            <span></span>
+          </div>
+          <div class="btn-bg"></div>
+        </div>
+      </div>
+    </div>
+
+    {% if user.is_authenticated %}
+  <a href="{% url 'logout' %}?next={{ request.path }}"
+     class="text-red-400 hover:text-red-500">
+     Logout
+  </a>
+{% else %}
+  <h3 onclick="openModal()" class="cursor-pointer">Login</h3>
+{% endif %}
+
+  </div>
+
+
+</div>
+
+<!-- BACKDROP -->
+<div id="backdrop" class="hidden fixed inset-0 bg-black/60 z-40"></div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999]">
+  <div id="modalContent" class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001]">
+    <button onclick="closeModal('loginModal')" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+
+    <h2 class="text-2xl font-bold text-center">Welcome Back</h2>
+    <p class="text-center text-gray-500 mb-6">Login to continue</p>
+
+   <a href="{% provider_login_url 'google' process='login' next='/' %}"
+   class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition duration-200 shadow-sm">
+    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" class="w-5 h-5">
+    <span class="text-sm font-medium text-gray-700">Continue with Google</span>
+</a>
+
+
+
+
+
+
+
+    <div class="flex items-center gap-4 mb-5">
+      <hr class="flex-1">
+      <span class="text-gray-400 text-sm">or</span>
+      <hr class="flex-1">
+    </div>
+
+    <input id="username" type="text" placeholder="Username or email" class="w-full px-4 py-2 mb-4 border border-gray-400 rounded-lg bg-transparent placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
+
+    <input id="password" type="password" placeholder="Password" class="w-full px-4 py-2 mb-2 border border-gray-400 rounded-lg bg-transparent placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
+
+   <div class="text-right mb-4">
+  <a href="#" data-open="forgot" class="text-sm text-indigo-600 hover:underline">
+    Forgot password?
+  </a>
+</div>
+
+
+    <button id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition">
+      Login
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+  Don't have an account?
+  <a href="#" data-open="signup" class="text-indigo-600 hover:underline">
+    Sign up
+  </a>
+</p>
+      </div>
+</div>
+
+
+<!-- SIGNUP MODAL -->
+<div
+  id="signupModal"
+  class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999] pointer-events-none"
+>
+  <div
+    class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001] pointer-events-auto"
+  >
+
+    <!-- CLOSE -->
+    <button
+      type="button"
+      onclick="closeModal('signupModal')"
+      class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl"
+    >
+      &times;
+    </button>
+
+    <h2 class="text-2xl font-bold text-center">Create Account</h2>
+    <p class="text-center text-gray-500 mb-6">Sign up to continue</p>
+
+    <input
+      id="signupUsername"
+      type="text"
+      placeholder="Username"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupEmail"
+      type="email"
+      placeholder="Email"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupPassword"
+      type="password"
+      placeholder="Password"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupConfirm"
+      type="password"
+      placeholder="Confirm Password"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <p id="signupError" class="text-red-600 text-sm mb-4 hidden"></p>
+
+    <!-- IMPORTANT FIX -->
+    <button
+      id="signupBtn"
+      type="button"
+      class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold"
+    >
+      Sign Up
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+      Already have an account?
+      <a
+        href="#"
+        onclick="openModal('login')"
+        class="text-indigo-600 hover:underline"
+      >
+        Login
+      </a>
+    </p>
+
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div id="forgotModal" class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999]">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001]">
+
+    <!-- CLOSE -->
+    <button onclick="closeModal('forgotModal')" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl">
+      &times;
+    </button>
+
+    <h2 class="text-2xl font-bold text-center">Forgot Password</h2>
+    <p class="text-center text-gray-500 mb-6">
+      Enter your username or email to reset password
+    </p>
+
+    <input
+      id="forgotUsername"
+      type="text"
+      placeholder="Username or email"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <p id="forgotError" class="text-red-600 text-sm mb-4 hidden"></p>
+
+    <button id="forgotBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold">
+      Reset Password
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+      Remembered your password?
+      <a href="#" onclick="openModal('login')" class="text-indigo-600 hover:underline">
+        Login
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- SUCCESS / FAIL LAYER -->
+<div id="successLayer" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white z-[10000]">
+  <div class="relative flex flex-col items-center justify-center">
+    <div id="pulseBg" class="hidden pulse-bg"></div>
+    <div id="spinner" class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+    <svg id="checkmark" class="hidden w-20 h-20 text-green-500 mb-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    </svg>
+    <svg id="cross" class="hidden w-20 h-20 text-red-500 mb-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 6L18 18M6 18L18 6"/>
+    </svg>
+  </div>
+  <p id="successText" class="mt-4 text-lg font-semibold text-green-600 hidden text-success"></p>
+  <p id="failText" class="mt-4 text-lg font-semibold text-red-600 hidden text-fail"></p>
+</div>
+
+
+
+
+{% block content %}
+{% endblock %}
+
+
+<script src="{% static 'js/script.js'%}"></script>
+
+</body>
+</html>
+
+
