@@ -274,7 +274,6 @@ function simulateLogin() {
   });
 }
 
-
 function handleSignup() {
   const u = signupUsername.value.trim();
   const e = signupEmail.value.trim();
@@ -305,7 +304,11 @@ function handleSignup() {
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      showSuccess("Account created successfully");
+      showSuccess("Account created successfully!");
+
+      // ✅ Option 1: reload page to reflect authenticated state
+      window.location.reload();
+
     } else {
       signupError.textContent = data.error;
       signupError.classList.remove("hidden");

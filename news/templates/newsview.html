@@ -96,7 +96,6 @@ tailwind.config = {
 
 
 <!-- ================= NAVBAR ================= -->
-<!-- ================= NAVBAR ================= -->
 <nav id="navbar"
      class="fixed top-0 inset-x-0 z-50 transition-colors duration-300 bg-transparent border-b border-transparent">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -176,195 +175,21 @@ tailwind.config = {
 
   </div>
 
-  <!-- BOTTOM: LOGIN/LOGOUT -->
-  <div class="p-6 border-t ">
+<div class="p-6 border-t">
     {% if user.is_authenticated %}
       <a href="{% url 'logout' %}?next={{ request.path }}"
-         class="block text-red-400 hover:text-red-500 font-semibold">Logout</a>
+         class="block text-red-400 hover:text-red-500 font-semibold"><i class="ph ph-sign-out text-lg"></i> Logout</a>
     {% else %}
       <h3 onclick="openModal()"
           class="cursor-pointer  font-semibold">Login</h3>
     {% endif %}
   </div>
 
+
 </div>
 
 <!-- BACKDROP -->
 <div id="backdrop" class="hidden fixed inset-0 bg-black/60 z-40"></div>
-
-
-
-<!--&lt;!&ndash; ================= NEWS PAGE ================= &ndash;&gt;-->
-<!--<div class="max-w-7xl mx-auto mt-28 px-4">-->
-
-<!--  <div class="flex flex-col md:flex-row gap-8">-->
-
-<!--    &lt;!&ndash; LEFT MEDIA &ndash;&gt;-->
-<!--    <div-->
-<!--      class="relative w-full md:w-1/2-->
-<!--             h-[55vh] sm:h-[60vh] md:h-[75vh]-->
-<!--             rounded-xl overflow-hidden-->
-<!--             md:sticky md:top-28">-->
-
-<!--      {% if post.image %}-->
-<!--      <img-->
-<!--        src="{{ post.image.url }}"-->
-<!--        class="w-full h-full object-cover"-->
-<!--        alt="{{ post.title }}" />-->
-<!--      {% elif post.video %}-->
-<!--      <video-->
-<!--        src="{{ post.video.url }}"-->
-<!--        class="w-full h-full object-cover"-->
-<!--        autoplay muted loop playsinline></video>-->
-<!--      {% else %}-->
-<!--      <img-->
-<!--        src="https://picsum.photos/800/1000"-->
-<!--        class="w-full h-full object-cover"-->
-<!--        alt="{{ post.title }}" />-->
-<!--      {% endif %}-->
-<!--    </div>-->
-
-<!--    &lt;!&ndash; RIGHT CONTENT &ndash;&gt;-->
-<!--    <div-->
-<!--      class="w-full md:w-1/2-->
-<!--             md:max-h-[75vh]-->
-<!--             md:overflow-y-auto-->
-<!--             md:pr-3 scrollbar-hide">-->
-
-<!--      &lt;!&ndash; META &ndash;&gt;-->
-<!--      <div class="text-gray-400 uppercase text-xs sm:text-sm mb-2">-->
-<!--        {{ post.category.name }} • {{ post.location|default:"Unknown" }}-->
-<!--      </div>-->
-
-<!--      &lt;!&ndash; TITLE &ndash;&gt;-->
-<!--      <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">-->
-<!--        {{ post.title }}-->
-<!--      </h1>-->
-
-<!--      &lt;!&ndash; AUTHOR &ndash;&gt;-->
-<!--      <div class="flex items-center gap-3 text-gray-400 text-sm mb-6">-->
-<!--        <img src="https://i.pravatar.cc/40" class="w-9 h-9 rounded-full">-->
-<!--        <span>By {{ post.author|default:"Admin" }}</span>-->
-<!--        <span>•</span>-->
-<!--        <span>{{ post.created_at|timesince }} ago</span>-->
-<!--      </div>-->
-
-<!--      &lt;!&ndash; ARTICLE CONTENT &ndash;&gt;-->
-<!--      <div class="space-y-4 text-gray-700 text-base sm:text-lg leading-relaxed">-->
-<!--        {{ post.description|linebreaks }}-->
-<!--      </div>-->
-
-<!--      &lt;!&ndash; ACTION BAR &ndash;&gt;-->
-<!--      <div class="flex items-center gap-6 border-t mt-8 pt-4 text-gray-600">-->
-<!--        <label class="flex items-center gap-2 cursor-pointer select-none">-->
-<!--          <input type="checkbox" class="hidden peer">-->
-<!--          <i class="ph ph-heart text-xl peer-checked:ph-fill peer-checked:text-red-500 transition"></i>-->
-<!--          <span class="text-sm font-medium peer-checked:text-red-500">1.2k</span>-->
-<!--        </label>-->
-
-<!--        <button id="commentToggle" class="flex items-center gap-2 hover:text-neon transition">-->
-<!--          <i class="ph ph-chat-circle text-xl"></i>-->
-<!--          <span class="text-sm font-medium">Comments</span>-->
-<!--        </button>-->
-
-<!--        <button id="shareBtn"-->
-<!--                class="flex items-center gap-2 hover:text-blue-500 transition ml-auto">-->
-<!--          <i class="ph ph-share-network text-xl"></i>-->
-<!--          <span class="text-sm font-medium">Share</span>-->
-<!--        </button>-->
-<!--      </div>-->
-
-<!--      &lt;!&ndash; COMMENTS &ndash;&gt;-->
-<!--<div id="commentsSection"-->
-<!--     class="mt-10 opacity-0 translate-y-12 overflow-hidden transition-all duration-500"-->
-<!--     style="max-height:0">-->
-
-<!--  <h2 class="text-xl font-bold mb-6">Comments</h2>-->
-
-<!--  &lt;!&ndash; EXISTING COMMENTS &ndash;&gt;-->
-<!--  <div id="commentList" class="space-y-6">-->
-<!--    {% for comment in comments %}-->
-<!--    <div class="commentItem">-->
-<!--      <div class="flex gap-3">-->
-<!--        <img-->
-<!--          src="{{ comment.user.profile.avatar|default:'/static/avatar.png' }}"-->
-<!--          class="w-9 h-9 rounded-full"-->
-<!--        >-->
-<!--        <div class="flex-1">-->
-<!--          <div class="font-semibold text-sm">-->
-<!--            {{ comment.user.profile.full_name|default:comment.user.username }}-->
-<!--          </div>-->
-
-<!--          {% if comment.text %}-->
-<!--            <div class="bg-gray-100 p-3 rounded-2xl mt-1">-->
-<!--              {{ comment.text }}-->
-<!--            </div>-->
-<!--          {% endif %}-->
-
-<!--          {% if comment.audio %}-->
-<!--            <audio controls class="mt-2 w-full">-->
-<!--              <source src="{{ comment.audio.url }}">-->
-<!--            </audio>-->
-<!--          {% endif %}-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--    {% empty %}-->
-<!--      <p class="text-sm text-gray-500">No comments yet.</p>-->
-<!--    {% endfor %}-->
-<!--  </div>-->
-
-<!--  &lt;!&ndash; ADD COMMENT &ndash;&gt;-->
-<!--  <div class="mt-10 pt-6 border-t">-->
-
-<!--    {% if user.is_authenticated %}-->
-<!--    &lt;!&ndash; LOGGED IN &ndash;&gt;-->
-<!--    <div class="flex gap-3 relative">-->
-<!--      <img-->
-<!--        src="{{ user.profile.avatar|default:'/static/avatar.png' }}"-->
-<!--        class="w-10 h-10 rounded-full"-->
-<!--      >-->
-
-<!--      <textarea id="commentInput"-->
-<!--                class="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm"-->
-<!--                rows="1"-->
-<!--                placeholder="Add a comment…"></textarea>-->
-
-<!--      <div id="commentRecordingOverlay"-->
-<!--           class="recordingOverlay hidden absolute inset-0 flex items-center justify-center pointer-events-none">-->
-<!--        <div class="recordingWave"></div>-->
-<!--        <span class="ml-2 recordingTimer">0s</span>-->
-<!--      </div>-->
-
-<!--      <button id="commentActionBtn"-->
-<!--              class="w-12 h-12 rounded-full bg-gray-200 text-xl">-->
-<!--        🎤-->
-<!--      </button>-->
-<!--    </div>-->
-
-<!--    {% else %}-->
-<!--    &lt;!&ndash; NOT LOGGED IN &ndash;&gt;-->
-<!--    <div class="flex gap-3 items-center">-->
-<!--      <img src="/static/avatar.png" class="w-10 h-10 rounded-full opacity-50">-->
-
-<!--      <div-->
-<!--        class="flex-1 px-4 py-3 rounded-2xl border text-sm text-gray-500 cursor-pointer bg-gray-50"-->
-<!--        onclick="openModal('login')">-->
-<!--        Login to add a comment…-->
-<!--      </div>-->
-<!--    </div>-->
-<!--    {% endif %}-->
-
-<!--  </div>-->
-<!--</div>-->
-
-<!--    </div>-->
-<!--  </div>-->
-<!--</div>-->
-
-
-
-
 
 
 <script>
@@ -435,7 +260,7 @@ tailwind.config = {
     <h2 class="text-2xl font-bold text-center">Welcome Back</h2>
     <p class="text-center text-gray-500 mb-6">Login to continue</p>
 
-   <a href="{% provider_login_url 'google' process='login' next='/' %}"
+   <a href="{% provider_login_url 'google' process='login' next=request.path %}"
    class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition duration-200 shadow-sm">
     <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" class="w-5 h-5">
     <span class="text-sm font-medium text-gray-700">Continue with Google</span>
@@ -458,9 +283,10 @@ tailwind.config = {
     <input id="password" type="password" placeholder="Password" class="w-full px-4 py-2 mb-2 border border-gray-400 rounded-lg bg-transparent placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
 
    <div class="text-right mb-4">
-  <a href="#" data-open="forgot" class="text-sm text-indigo-600 hover:underline">
-    Forgot password?
-  </a>
+ <a href="#" onclick="openModal('forgot')" class="text-sm text-indigo-600 hover:underline">
+  Forgot password?
+</a>
+
 </div>
 
 
@@ -470,9 +296,10 @@ tailwind.config = {
 
     <p class="text-center text-gray-500 mt-6">
   Don't have an account?
-  <a href="#" data-open="signup" class="text-indigo-600 hover:underline">
-    Sign up
-  </a>
+  <a href="#" onclick="openModal('signup')" class="text-indigo-600 hover:underline">
+  Sign up
+</a>
+
 </p>
       </div>
 </div>
@@ -481,7 +308,8 @@ tailwind.config = {
 <!-- SIGNUP MODAL -->
 <div
   id="signupModal"
-  class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999] pointer-events-none"
+  class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999] pointer-events-auto
+"
 >
   <div
     class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001] pointer-events-auto"
@@ -605,15 +433,6 @@ tailwind.config = {
 </div>
 
 
-
-
-
-
-
-
-
-
-
 <!-- ================= NEWS PAGE ================= -->
 <div class="max-w-7xl mx-auto mt-28 px-4">
 
@@ -626,11 +445,19 @@ tailwind.config = {
                 md:sticky md:top-28">
 
       {% if post.image %}
-      <img src="{{ post.image.url }}" class="w-full h-full object-cover" alt="{{ post.title }}" />
+        <img src="{{ post.image.url }}" class="w-full h-full object-cover" alt="{{ post.title }}">
       {% elif post.video %}
-      <video src="{{ post.video.url }}" class="w-full h-full object-cover" autoplay muted loop playsinline></video>
+        <video
+          src="{{ post.video.url }}"
+          class="w-full h-full object-cover"
+          autoplay
+          muted
+          loop
+          playsinline
+          controls>
+        </video>
       {% else %}
-      <img src="https://picsum.photos/800/1000" class="w-full h-full object-cover" alt="{{ post.title }}" />
+        <img src="https://picsum.photos/800/1000" class="w-full h-full object-cover" alt="{{ post.title }}">
       {% endif %}
     </div>
 
@@ -639,16 +466,21 @@ tailwind.config = {
 
       <!-- META -->
       <div class="text-gray-400 uppercase text-xs sm:text-sm mb-2">
-        {{ post.category.name }} •
-<!--          {{ post.location|default:"Unknown" }}-->
+        {{ post.category.name }}
       </div>
 
       <!-- TITLE -->
-      <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">{{ post.title }}</h1>
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">
+        {{ post.title }}
+      </h1>
 
       <!-- AUTHOR -->
       <div class="flex items-center gap-3 text-gray-400 text-sm mb-6">
-        <img src="https://i.pravatar.cc/40" class="w-9 h-9 rounded-full">
+         <img
+        src="{% static 'images/users.jpg' %}"
+        class="w-9 h-9 rounded-full object-cover"
+        alt="user"
+      >
         <span>By {{ post.author|default:"Admin" }}</span>
         <span>•</span>
         <span>{{ post.created_at|timesince }} ago</span>
@@ -664,13 +496,14 @@ tailwind.config = {
 
         <!-- POST LIKE -->
         <button id="postLikeBtn" data-post-id="{{ post.id }}" class="flex items-center gap-1">
-  <svg class="w-5 h-5 heartIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318 1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
-  </svg>
-  <span id="postLikeCount">{{ post.likes.count }}</span>
-</button>
-
+          <svg class="w-5 h-5 heartIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318
+                     C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318
+                     1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
+          </svg>
+          <span id="postLikeCount">{{ post.likes.count }}</span>
+        </button>
 
         <!-- COMMENTS TOGGLE -->
         <button id="commentToggle" class="flex items-center gap-2 hover:text-neon transition">
@@ -678,23 +511,24 @@ tailwind.config = {
           <span class="text-sm font-medium">Comments</span>
         </button>
 
+        <!-- SHARE -->
+        <button id="shareBtn" class="flex items-center gap-2 hover:text-blue-500 transition ml-auto">
+          <i class="ph ph-share-network text-xl"></i>
+          <span class="text-sm font-medium">Share</span>
+        </button>
 
-        <!-- SHARE BUTTON -->
-<button id="shareBtn" class="flex items-center gap-2 hover:text-blue-500 transition ml-auto">
-  <i class="ph ph-share-network text-xl"></i>
-  <span class="text-sm font-medium">Share</span>
-</button>
-
-<!-- Optional: Hidden input for post data -->
-<input type="hidden" id="postShareData"
-       data-title="{{ post.title }}"
-       data-url="{{ request.build_absolute_uri }}"
-       data-image="{% if post.image %}{{ post.image.url }}{% else %}/static/img/default-share.jpg{% endif %}">
-
+        <input type="hidden" id="postShareData"
+               data-title="{{ post.title }}"
+               data-url="{{ request.build_absolute_uri }}"
+               data-image="{% if post.image %}{{ post.image.url }}{% else %}/static/img/default-share.jpg{% endif %}">
       </div>
 
       <!-- COMMENTS SECTION -->
-      <div id="commentsSection" class="mt-10 opacity-0 translate-y-12 overflow-hidden transition-all duration-500" style="max-height:0" data-post-id="{{ post.id }}">
+      <div id="commentsSection"
+           class="mt-10 opacity-0 translate-y-12 overflow-hidden transition-all duration-500"
+           style="max-height:0"
+           data-post-id="{{ post.id }}">
+
         <h2 class="text-xl font-bold mb-6">Comments</h2>
 
         <!-- EXISTING COMMENTS -->
@@ -702,64 +536,94 @@ tailwind.config = {
           {% for comment in comments %}
           <div class="commentItem" data-comment-id="{{ comment.id }}">
             <div class="flex gap-3">
-              <img src="{{ comment.user.profile.avatar|default:'/static/avatar.png' }}" class="w-9 h-9 rounded-full">
+            <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar }}{% else %}{% static 'images/users.jpg' %}{% endif %}"
+     class="w-9 h-9 rounded-full"
+     alt="{{ comment.user.username }}">
+
+
               <div class="flex-1">
-                <div class="font-semibold text-sm">{{ comment.user.profile.full_name|default:comment.user.username }}</div>
+                <div class="font-semibold text-sm">
+                  {{ comment.user.profile.full_name|default:comment.user.username }}
+                </div>
 
                 {% if comment.text %}
-                <div class="bg-gray-100 p-3 rounded-2xl mt-1">{{ comment.text }}</div>
+                  <div class="bg-gray-100 p-3 rounded-2xl mt-1">
+                    {{ comment.text }}
+                  </div>
                 {% endif %}
 
                 {% if comment.audio %}
-                <audio controls class="mt-2 w-full">
-                  <source src="{{ comment.audio.url }}">
-                </audio>
+                  <audio controls class="mt-2 w-full">
+                    <source src="{{ comment.audio.url }}">
+                  </audio>
                 {% endif %}
 
                 <div class="flex items-center gap-4 mt-1 text-sm text-gray-500">
+
                   <button class="replyBtn">Reply</button>
 
-                  <!-- COMMENT LIKE BUTTON -->
-                  <button class="likeBtn flex items-center gap-1" data-comment-id="{{ comment.id }}">
-                    <svg class="w-4 h-4 heartIcon {% if user_liked_comment %}liked{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <!-- COMMENT LIKE -->
+                  <button class="likeBtn flex items-center gap-1"
+                          data-comment-id="{{ comment.id }}">
+                    <svg class="w-4 h-4 heartIcon {% if user in comment.likes.all %}liked{% endif %}"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318 1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z" />
+                            d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318
+                               C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318
+                               1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
                     </svg>
                     <span class="likeCount">{{ comment.likes.count }}</span>
                   </button>
 
                   {% if user == comment.user %}
-                  <button class="deleteBtn">Delete</button>
+                    <button class="deleteBtn">Delete</button>
                   {% endif %}
                 </div>
+
                 <div class="replies ml-8 mt-2"></div>
               </div>
             </div>
           </div>
           {% empty %}
-          <p class="text-sm text-gray-500">No comments yet.</p>
+            <p class="text-sm text-gray-500">No comments yet.</p>
           {% endfor %}
         </div>
 
         <!-- ADD COMMENT -->
         <div class="mt-10 pt-6 border-t">
           {% if user.is_authenticated %}
-          <div class="flex gap-3 relative">
-            <img src="{{ user.profile.avatar|default:'/static/avatar.png' }}" class="w-10 h-10 rounded-full">
-            <textarea id="commentInput" class="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm" rows="1" placeholder="Add a comment…"></textarea>
-            <div id="commentRecordingOverlay" class="recordingOverlay hidden absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div class="recordingWave"></div>
-              <span class="ml-2 recordingTimer">0s</span>
+            <div class="flex gap-3 relative">
+              <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar }}{% else %}{% static 'images/users.jpg' %}{% endif %}"
+     class="w-9 h-9 rounded-full"
+     alt="{{ comment.user.username }}">
+
+              <textarea id="commentInput"
+                        class="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm"
+                        rows="1"
+                        placeholder="Add a comment…"></textarea>
+
+              <div id="commentRecordingOverlay"
+                   class="recordingOverlay hidden absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="recordingWave"></div>
+                <span class="ml-2 recordingTimer">0s</span>
+              </div>
+
+              <button id="commentActionBtn"
+                      class="w-12 h-12 rounded-full bg-gray-200 text-xl">
+                🎤
+              </button>
             </div>
-            <button id="commentActionBtn" class="w-12 h-12 rounded-full bg-gray-200 text-xl">🎤</button>
-          </div>
           {% else %}
-          <div class="flex gap-3 items-center">
-            <img src="/static/avatar.png" class="w-10 h-10 rounded-full opacity-50">
-            <div class="flex-1 px-4 py-3 rounded-2xl border text-sm text-gray-500 cursor-pointer bg-gray-50" onclick="openModal('login')">
-              Login to add a comment…
+            <div class="flex gap-3 items-center">
+              <img src="{% if comment.user.profile.avatar %}{{ comment.user.profile.avatar }}{% else %}{% static 'images/users.jpg' %}{% endif %}"
+     class="w-9 h-9 rounded-full"
+     alt="{{ comment.user.username }}">
+              <div class="flex-1 px-4 py-3 rounded-2xl border text-sm text-gray-500
+                          cursor-pointer bg-gray-50"
+                   onclick="openModal('login')">
+                Login to add a comment…
+              </div>
             </div>
-          </div>
           {% endif %}
         </div>
 
@@ -771,15 +635,6 @@ tailwind.config = {
 
 <!-- Hidden CSRF form -->
 <form id="csrfForm" style="display:none;">{% csrf_token %}</form>
-
-
-
-
-
-
-
-
-
 
 
 <section class="mt-16 border-t pt-10 px-6 sm:px-10 lg:px-20 xl:px-28">
@@ -863,9 +718,6 @@ tailwind.config = {
 
 </section>
 
-
-
-
 <footer class="mt-20 border-t  px-6 sm:px-10 lg:px-20 xl:px-28">
   <div class="py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
 
@@ -945,8 +797,6 @@ tailwind.config = {
   </div>
 </footer>
 
-
-
 <script>
 const shareBtn = document.getElementById('shareBtn');
 const postData = document.getElementById('postShareData');
@@ -989,17 +839,6 @@ shareBtn.addEventListener('click', async () => {
     }
 });
 </script>
-
-
-
-
-
-
-
-
-
-
-
 <!-- JS START -->
 <script>
 // ---------------- ELEMENTS ----------------
@@ -1285,10 +1124,6 @@ commentActionBtn.onclick = ()=>handleAction(input, commentActionBtn, postComment
 .heartIcon{stroke-width:2; color:#ef4444;}
 .heartIcon.liked{fill:#ef4444; stroke:none;}
 </style>
-
-
-
-
 
 
 <!-- ================= FILTER STYLE ================= -->
@@ -1602,243 +1437,298 @@ mobileToggle?.addEventListener("change", () => {
 
 
 <script>
-/* ================= ELEMENTS ================= */
-const toggleBtn = document.getElementById("commentToggle");
-const comments = document.getElementById("commentsSection");
-const input = document.getElementById("commentInput");
-const commentActionBtn = document.getElementById("commentActionBtn");
-const commentOverlay = document.getElementById("commentRecordingOverlay");
-const list = document.getElementById("commentList");
+/* ======================================================
+   GLOBAL VARIABLES
+===================================================== */
+let loginModal, signupModal, forgotModal;
+let loginBtn, signupBtn, forgotBtn;
+let signupError, forgotError;
 
-/* ================= STATE ================= */
-let open = false;
-let activeRecorder = null;
-let activeChunks = [];
-let activeInterval = null;
+let layer, spinner, check, cross, pulse;
+let textSuccess, textFail;
 
-/* ================= HEIGHT ================= */
-function updateCommentsHeight() {
-  if (open) {
-    comments.style.maxHeight = comments.scrollHeight + "px";
-  }
-}
+/* ======================================================
+   INITIALIZE
+===================================================== */
+window.addEventListener("load", () => {
+  // Modals
+  loginModal  = document.getElementById("loginModal");
+  signupModal = document.getElementById("signupModal");
+  forgotModal = document.getElementById("forgotModal");
 
-/* ================= TOGGLE COMMENTS ================= */
-toggleBtn.onclick = () => {
-  open = !open;
+  // Buttons
+  loginBtn  = document.getElementById("loginBtn");
+  signupBtn = document.getElementById("signupBtn");
+  forgotBtn = document.getElementById("forgotBtn");
 
-  if (open) {
-    comments.classList.remove("opacity-0", "translate-y-12");
-    comments.classList.add("opacity-100", "translate-y-0");
-    comments.style.maxHeight = comments.scrollHeight + "px";
+  // Errors
+  signupError = document.getElementById("signupError");
+  forgotError = document.getElementById("forgotError");
 
-    setTimeout(() => {
-      comments.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    }, 50);
+  // Success / Fail layer
+  layer = document.getElementById("successLayer");
+  spinner = document.getElementById("spinner");
+  check = document.getElementById("checkmark");
+  cross = document.getElementById("cross");
+  pulse = document.getElementById("pulseBg");
+  textSuccess = document.getElementById("successText");
+  textFail = document.getElementById("failText");
 
-  } else {
-    comments.classList.add("opacity-0", "translate-y-12");
-    comments.classList.remove("opacity-100", "translate-y-0");
-    comments.style.maxHeight = "0px";
-  }
-};
-
-/* ================= AUTO RESIZE ================= */
-function autoResize(t) {
-  t.style.height = "auto";
-  t.style.height = t.scrollHeight + "px";
-}
-
-/* ================= BUTTON STATE ================= */
-function updateBtn(t, b) {
-  if (t.value.trim()) {
-    b.textContent = "Post";
-    b.className = "px-4 py-2 rounded-2xl bg-neon text-black text-sm";
-  } else {
-    b.textContent = "🎤";
-    b.className = "w-12 h-12 rounded-full bg-gray-200 text-xl";
-  }
-}
-
-input.oninput = () => {
-  autoResize(input);
-  updateBtn(input, commentActionBtn);
-};
-
-/* ================= AUDIO / TEXT HANDLER ================= */
-async function handleAction(textarea, button, callback, overlay = null) {
-  // TEXT MODE
-  if (textarea.value.trim()) {
-    callback({ text: textarea.value.trim() });
-    textarea.value = "";
-    autoResize(textarea);
-    updateBtn(textarea, button);
-    updateCommentsHeight();
-    return;
-  }
-
-  // STOP RECORDING
-  if (activeRecorder) {
-    activeRecorder.stop();
-    return;
-  }
-
-  // START RECORDING
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const recorder = new MediaRecorder(stream);
-  activeRecorder = recorder;
-  activeChunks = [];
-
-  if (overlay) {
-    overlay.classList.add("active");
-    let sec = 0;
-    const timer = overlay.querySelector(".recordingTimer");
-    activeInterval = setInterval(() => {
-      sec++;
-      if (timer) timer.textContent = sec + "s";
-    }, 1000);
-  }
-
-  recorder.ondataavailable = e => activeChunks.push(e.data);
-
-  recorder.onstop = async () => {
-    const blob = new Blob(activeChunks, { type: "audio/webm" });
-    await callback({ audio: blob });
-
-    if (overlay) {
-      overlay.classList.remove("active");
-      clearInterval(activeInterval);
-    }
-
-    activeRecorder = null;
-    updateBtn(textarea, button);
-    updateCommentsHeight();
-  };
-
-  recorder.start();
-}
-
-/* ================= COMMENT BUTTON ================= */
-commentActionBtn.onclick = () => {
-  handleAction(input, commentActionBtn, postComment, commentOverlay);
-};
-
-/* ================= POST COMMENT TO BACKEND ================= */
-async function postComment({ text = "", audio = null }) {
-  const postId = comments.dataset.postId;
-  const formData = new FormData();
-  formData.append("post_id", postId);
-  if (text) formData.append("text", text);
-  if (audio) formData.append("audio", audio);
-
-  const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
-
-  const res = await fetch("/comment/add/", {
-    method: "POST",
-    headers: {
-      "X-CSRFToken": csrfToken
-    },
-    body: formData
+  // Prevent # jumps
+  document.querySelectorAll("[data-open]").forEach(el => {
+    el.addEventListener("click", e => e.preventDefault());
   });
 
-  const data = await res.json();
-  if (res.ok) {
-    addCommentToUI(data);
-  } else {
-    alert(data.error || "Failed to post comment");
-  }
-}
-
-/* ================= ADD COMMENT TO UI ================= */
-function addCommentToUI({ text = "", audio = "", username = "You", avatar = "/static/avatar.png" }) {
-  const c = document.createElement("div");
-  c.className = "commentItem";
-  c.innerHTML = `
-    <div class="flex gap-3">
-      <img src="${avatar}" class="w-9 h-9 rounded-full">
-      <div class="flex-1">
-        <div class="font-semibold text-sm">${username}</div>
-        ${text ? `<div class="bg-gray-100 p-3 rounded-2xl mt-1">${text}</div>` : ""}
-        ${audio ? `<audio controls class="mt-2 w-full"><source src="${audio}"></audio>` : ""}
-        <div class="flex gap-4 mt-1 text-xs text-gray-500">
-          <button class="likeBtn"><i class="ph ph-heart"></i> <span>0</span></button>
-          <button class="replyBtn">Reply</button>
-        </div>
-        <div class="repliesList mt-2 ml-12 space-y-3"></div>
-        <div class="replySection hidden mt-2 ml-12"></div>
-      </div>
-    </div>`;
-  list.appendChild(c);
-  updateCommentsHeight();
-}
-
-/* ================= ADD REPLY ================= */
-function addReply(section, { text = "", audio = "" }) {
-  const list = section.closest(".commentItem").querySelector(".repliesList");
-  const r = document.createElement("div");
-  r.className = "flex gap-3 items-start";
-  r.innerHTML = `
-    <img src="https://i.pravatar.cc/40" class="w-8 h-8 rounded-full mt-1">
-    <div class="flex-1">
-      <div class="bg-gray-100 p-2 rounded-xl">
-        ${text ? `<div class="text-sm mb-1">${text}</div>` : ""}
-        ${audio ? `<audio controls class="w-full"><source src="${audio}"></audio>` : ""}
-      </div>
-    </div>`;
-  list.appendChild(r);
-  updateCommentsHeight();
-}
-
-/* ================= GLOBAL EVENTS ================= */
-document.addEventListener("click", e => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-
-  // LIKE
-  if (btn.classList.contains("likeBtn")) {
-    const i = btn.querySelector("i");
-    const s = btn.querySelector("span");
-    i.classList.toggle("ph-fill");
-    i.classList.toggle("text-red-500");
-    s.textContent =
-      +s.textContent + (i.classList.contains("ph-fill") ? 1 : -1);
-  }
-
-  // TOGGLE REPLY
-  if (btn.classList.contains("replyBtn")) {
-    btn.closest(".commentItem")
-      .querySelector(".replySection")
-      .classList.toggle("hidden");
-    updateCommentsHeight();
-  }
-
-  // CANCEL REPLY
-  if (btn.classList.contains("cancelReplyBtn")) {
-    btn.closest(".replySection").classList.add("hidden");
-    updateCommentsHeight();
-  }
-
-  // POST REPLY
-  if (btn.classList.contains("replyActionBtn")) {
-    const section = btn.closest(".replySection");
-    const textarea = section.querySelector(".replyInput");
-    const overlay = section.querySelector(".recordingOverlay");
-
-    handleAction(textarea, btn, async data => {
-      // Optional: send reply to backend here too
-      addReply(section, data);
-      section.classList.add("hidden");
-      textarea.value = "";
-    }, overlay);
-  }
+  attachModalEvents();
+  handlePostLoginUI();
 });
+
+/* ======================================================
+   MODAL EVENTS
+===================================================== */
+function attachModalEvents() {
+  document.querySelectorAll("[data-open='login']").forEach(el =>
+    el.addEventListener("click", () => openModal("login"))
+  );
+
+  document.querySelectorAll("[data-open='signup']").forEach(el =>
+    el.addEventListener("click", () => openModal("signup"))
+  );
+
+  document.querySelectorAll("[data-open='forgot']").forEach(el =>
+    el.addEventListener("click", () => openModal("forgot"))
+  );
+
+  loginBtn?.addEventListener("click", simulateLogin);
+  signupBtn?.addEventListener("click", handleSignup);
+  forgotBtn?.addEventListener("click", handleForgot);
+}
+
+/* ======================================================
+   OPEN / CLOSE MODALS
+===================================================== */
+function openModal(type = "login") {
+  closeAllModals();
+
+  const modalMap = {
+    login: loginModal,
+    signup: signupModal,
+    forgot: forgotModal
+  };
+
+  const modal = modalMap[type];
+  if (!modal) return;
+
+  modal.classList.remove("hidden");
+  modal.classList.remove("pointer-events-none");
+  document.body.classList.add("overflow-hidden");
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.add("pointer-events-none");
+  document.body.classList.remove("overflow-hidden");
+}
+
+function closeAllModals() {
+  [loginModal, signupModal, forgotModal].forEach(m => {
+    if (!m) return;
+    m.classList.add("hidden");
+    m.classList.add("pointer-events-none");
+  });
+
+  document.body.classList.remove("overflow-hidden");
+}
+
+/* ======================================================
+   LOGIN / SIGNUP / FORGOT
+===================================================== */
+function simulateLogin() {
+  const u = document.getElementById("username")?.value.trim();
+  const p = document.getElementById("password")?.value;
+
+  if (!u || !p) {
+    showFail("Please enter username and password");
+    return;
+  }
+
+  loginBtn.disabled = true;
+  resetAnimations();
+
+  fetch("/login-ajax/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": getCookie("csrftoken")
+    },
+    body: new URLSearchParams({ username: u, password: p })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // ⭐ Remember to open comments after reload
+      sessionStorage.setItem("openCommentsAfterLogin", "1");
+      showSuccess(data.message || "Login successful");
+    } else {
+      showFail(data.error || "Login failed");
+    }
+  })
+  .catch(() => showFail("Something went wrong. Try again."))
+  .finally(() => loginBtn.disabled = false);
+}
+
+function handleSignup() {
+  const u = signupUsername?.value.trim();
+  const e = signupEmail?.value.trim();
+  const p = signupPassword?.value;
+  const c = signupConfirm?.value;
+
+  if (!u || !e || !p || !c) {
+    signupError.textContent = "All fields are required";
+    signupError.classList.remove("hidden");
+    return;
+  }
+
+  signupError.classList.add("hidden");
+
+  fetch("/signup-ajax/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": getCookie("csrftoken")
+    },
+    body: new URLSearchParams({ username: u, email: e, password: p, confirm: c })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showSuccess("Account created successfully");
+    } else {
+      signupError.textContent = data.error;
+      signupError.classList.remove("hidden");
+    }
+  })
+  .catch(() => {
+    signupError.textContent = "Server error. Try again.";
+    signupError.classList.remove("hidden");
+  });
+}
+
+function handleForgot() {
+  const value = document.getElementById("forgotUsername")?.value.trim();
+
+  if (!value) {
+    forgotError.textContent = "Enter username or email";
+    forgotError.classList.remove("hidden");
+    return;
+  }
+
+  forgotError.classList.add("hidden");
+
+  fetch("/forgot-password-ajax/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": getCookie("csrftoken")
+    },
+    body: new URLSearchParams({ username: value })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      showSuccess(data.message);
+    } else {
+      forgotError.textContent = data.error;
+      forgotError.classList.remove("hidden");
+    }
+  })
+  .catch(() => {
+    forgotError.textContent = "Server error. Try again.";
+    forgotError.classList.remove("hidden");
+  });
+}
+
+/* ======================================================
+   CSRF HELPER
+===================================================== */
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie) {
+    document.cookie.split(";").forEach(cookie => {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+      }
+    });
+  }
+  return cookieValue;
+}
+
+/* ======================================================
+   SUCCESS / FAIL ANIMATION
+===================================================== */
+function resetAnimations() {
+  spinner?.classList.remove("hidden");
+  check?.classList.add("hidden");
+  cross?.classList.add("hidden");
+  pulse?.classList.add("hidden");
+  textSuccess?.classList.add("hidden");
+  textFail?.classList.add("hidden");
+}
+
+function showSuccess(msg) {
+  resetAnimations();
+  layer?.classList.remove("hidden");
+
+  textSuccess.textContent = msg;
+  textSuccess.classList.remove("hidden");
+
+  setTimeout(() => {
+    spinner.classList.add("hidden");
+    check.classList.remove("hidden");
+    pulse.classList.remove("hidden");
+
+    setTimeout(() => {
+      layer.classList.add("hidden");
+      closeAllModals();
+      window.location.reload();
+    }, 1200);
+  }, 600);
+}
+
+function showFail(msg) {
+  resetAnimations();
+  layer?.classList.remove("hidden");
+
+  spinner.classList.add("hidden");
+  cross.classList.remove("hidden");
+  textFail.textContent = msg;
+  textFail.classList.remove("hidden");
+
+  setTimeout(() => layer.classList.add("hidden"), 1200);
+}
+
+/* ======================================================
+   AFTER LOGIN UI (OPEN COMMENTS)
+===================================================== */
+function handlePostLoginUI() {
+  if (sessionStorage.getItem("openCommentsAfterLogin") === "1") {
+    sessionStorage.removeItem("openCommentsAfterLogin");
+
+    const toggleBtn = document.getElementById("commentToggle");
+    const comments = document.getElementById("commentsSection");
+    const input = document.getElementById("commentInput");
+
+    if (toggleBtn && comments) {
+      toggleBtn.click();
+      setTimeout(() => input?.scrollIntoView({ behavior: "smooth", block: "center" }), 400);
+    }
+  }
+}
 </script>
-
-
-
 
 <!--</script>-->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">

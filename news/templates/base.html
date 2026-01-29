@@ -170,13 +170,12 @@ tailwind.config = {
   <div class="p-6 border-t">
     {% if user.is_authenticated %}
       <a href="{% url 'logout' %}?next={{ request.path }}"
-         class="block text-red-400 hover:text-red-500 font-semibold">Logout</a>
+         class="block text-red-400 hover:text-red-500 font-semibold"><i class="ph ph-sign-out text-lg"></i> Logout</a>
     {% else %}
       <h3 onclick="openModal()"
           class="cursor-pointer  font-semibold">Login</h3>
     {% endif %}
   </div>
-
 </div>
 
 <!-- BACKDROP -->

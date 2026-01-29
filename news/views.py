@@ -14,7 +14,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-
+from django.contrib.sessions.models import Session
 
 MAX_ATTEMPTS = 5
 LOCKOUT_TIME = 60 * 60  # 1 hour in seconds
@@ -68,6 +68,78 @@ def superuser_login(request):
 
     return render(request, "admin_login.html")
 
+
+# @never_cache
+# @login_required(login_url="/login/")
+# @user_passes_test(lambda u: u.is_superuser)
+# def admin_dashboard(request):
+#
+#     if request.method == "POST":
+#         action = request.POST.get("action")
+#
+#         # ================= CATEGORY =================
+#         if action == "add_category":
+#             name = request.POST.get("category_name")
+#             if name:
+#                 Category.objects.get_or_create(name=name)
+#                 messages.success(request, "Category added successfully")
+#
+#         elif action == "edit_category":
+#             category_id = request.POST.get("category_id")
+#             name = request.POST.get("category_name")
+#             category = get_object_or_404(Category, id=category_id)
+#             category.name = name
+#             category.save()
+#             messages.success(request, "Category updated successfully")
+#
+#         elif action == "delete_category":
+#             category_id = request.POST.get("category_id")
+#             Category.objects.filter(id=category_id).delete()
+#             messages.success(request, "Category deleted successfully")
+#
+#         # ================= STORY =================
+#         elif action == "add_story":
+#             link = request.POST.get("link")
+#             description = request.POST.get("description")
+#             media = request.FILES.get("media")
+#
+#             if not media:
+#                 messages.error(request, "Image or video is required")
+#                 return redirect("admin-dashboard")
+#
+#             story = Story(link=link, description=description)
+#
+#             if media.content_type.startswith("image"):
+#                 story.image = media
+#             elif media.content_type.startswith("video"):
+#                 story.video = media
+#             else:
+#                 messages.error(request, "Unsupported file type")
+#                 return redirect("admin-dashboard")
+#
+#             story.save()
+#             messages.success(request, "Story added successfully")
+#
+#         return redirect("admin-dashboard")
+#
+#     # ================= GET =================
+#     categories = Category.objects.order_by("-id")
+#     stories = Story.objects.order_by("-created_at")
+#
+#     # Show all posts in the news grid, no filtering by category
+#     news_posts = Post.objects.order_by("-created_at")
+#     all_posts = news_posts  # same as news_posts, can be used elsewhere if needed
+#
+#     return render(
+#         request,
+#         "admin_dashboard.html",
+#         {
+#             "categories": categories,
+#             "stories": stories,
+#             "news_posts": news_posts,
+#             "all_posts": all_posts,
+#         }
+#     )
 
 @never_cache
 @login_required(login_url="/login/")
@@ -126,9 +198,54 @@ def admin_dashboard(request):
     categories = Category.objects.order_by("-id")
     stories = Story.objects.order_by("-created_at")
 
-    # Show all posts in the news grid, no filtering by category
     news_posts = Post.objects.order_by("-created_at")
-    all_posts = news_posts  # same as news_posts, can be used elsewhere if needed
+    all_posts = news_posts
+
+    # ================= USERS LIST =================
+
+    # all normal users (Signup model)
+    signups = Signup.objects.order_by("-created_at")
+
+    # active sessions
+    active_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+    active_user_ids = set()
+
+    for session in active_sessions:
+        data = session.get_decoded()
+        uid = data.get("_auth_user_id")
+        if uid:
+            active_user_ids.add(int(uid))
+
+    # map Django users (google + local)
+    django_users = {
+        u.username: u
+        for u in User.objects.filter(
+            username__in=signups.values_list("username", flat=True),
+            is_superuser=False
+        ).select_related("profile")
+    }
+
+    # final users list with status
+    users = []
+    for signup in signups:
+        dj_user = django_users.get(signup.username)
+
+        is_active = False
+        last_login = None
+
+        if dj_user:
+            is_active = dj_user.id in active_user_ids
+            last_login = dj_user.last_login
+
+        users.append({
+            "signup": signup,
+            "is_active": is_active,
+            "last_login": last_login,
+            "provider": getattr(dj_user.profile, "provider", "local") if dj_user else "local",
+        })
+
+    # active users first
+    users.sort(key=lambda x: x["is_active"], reverse=True)
 
     return render(
         request,
@@ -138,6 +255,9 @@ def admin_dashboard(request):
             "stories": stories,
             "news_posts": news_posts,
             "all_posts": all_posts,
+
+            # 👇 users list (final)
+            "users": users,
         }
     )
 
@@ -378,10 +498,37 @@ def signup_ajax(request):
     if Signup.objects.filter(email=email).exists():
         return JsonResponse({"success": False, "error": "Email already registered"})
 
-    Signup.objects.create(
+    # Create Signup entry
+    signup = Signup.objects.create(
         username=username,
         email=email,
         password=make_password(password)
+    )
+
+    # ✅ Get or create Django User
+    user, created = User.objects.get_or_create(
+        username=signup.username,
+        defaults={"email": signup.email}
+    )
+
+    if created:
+        user.set_password(password)
+        user.save()
+
+    # ✅ Get or create Profile
+    profile, _ = Profile.objects.get_or_create(
+        user=user,
+        defaults={
+            "email": signup.email,
+            "provider": "local"
+        }
+    )
+
+    # ✅ Auto-login the user
+    login(
+        request,
+        user,
+        backend="django.contrib.auth.backends.ModelBackend"
     )
 
     return JsonResponse({"success": True})
@@ -395,20 +542,48 @@ def login_ajax(request):
     if not username_or_email or not password:
         return JsonResponse({"success": False, "error": "All fields are required"})
 
-    # Try to get user by username or email
+    # 1️⃣ Find user in Signup table
     try:
-        user = Signup.objects.get(username=username_or_email)
+        signup = Signup.objects.get(username=username_or_email)
     except Signup.DoesNotExist:
         try:
-            user = Signup.objects.get(email=username_or_email)
+            signup = Signup.objects.get(email=username_or_email)
         except Signup.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Invalid username or email"})
+            return JsonResponse({"success": False, "error": "Invalid credentials"})
 
-    # Check hashed password
-    if check_password(password, user.password):
-        return JsonResponse({"success": True, "message": f"Logged in as {user.username}"})
-    else:
-        return JsonResponse({"success": False, "error": "Incorrect password"})
+    # 2️⃣ Check password
+    if not check_password(password, signup.password):
+        return JsonResponse({"success": False, "error": "Invalid credentials"})
+
+    # 3️⃣ Get or create Django User
+    user, created = User.objects.get_or_create(
+        username=signup.username,
+        defaults={"email": signup.email}
+    )
+
+    if created:
+        user.set_password(password)
+        user.save()
+
+    # 4️⃣ Get or create Profile (VERY IMPORTANT)
+    profile, _ = Profile.objects.get_or_create(
+        user=user,
+        defaults={
+            "email": signup.email,
+            "provider": "local"
+        }
+    )
+
+    # 5️⃣ Login user (backend REQUIRED because of Google auth)
+    login(
+        request,
+        user,
+        backend="django.contrib.auth.backends.ModelBackend"
+    )
+
+    return JsonResponse({"success": True})
+
+
 
 @require_POST
 @csrf_exempt
