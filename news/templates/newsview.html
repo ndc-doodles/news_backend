@@ -547,7 +547,7 @@ tailwind.config = {
                 </div>
 
                 {% if comment.text %}
-                  <div class="bg-gray-100 p-3 rounded-2xl mt-1">
+                  <div class="bg-transparent p-3 rounded-2xl mt-1">
                     {{ comment.text }}
                   </div>
                 {% endif %}
@@ -598,9 +598,9 @@ tailwind.config = {
      alt="{{ comment.user.username }}">
 
               <textarea id="commentInput"
-                        class="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm"
+                        class="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm bg-transparent"
                         rows="1"
-                        placeholder="Add a comment…"></textarea>
+                        placeholder="Add a comment…" ></textarea>
 
               <div id="commentRecordingOverlay"
                    class="recordingOverlay hidden absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -610,7 +610,7 @@ tailwind.config = {
 
               <button id="commentActionBtn"
                       class="w-12 h-12 rounded-full bg-gray-200 text-xl">
-                🎤
+                <i class="ph ph-microphone"></i>
               </button>
             </div>
           {% else %}
@@ -839,7 +839,6 @@ shareBtn.addEventListener('click', async () => {
     }
 });
 </script>
-<!-- JS START -->
 <script>
 // ---------------- ELEMENTS ----------------
 const toggleBtn = document.getElementById("commentToggle");
@@ -859,6 +858,29 @@ let activeInterval = null;
 let activeReplyRecorder = null;
 let activeReplyChunks = [];
 let activeReplyInterval = null;
+
+// ---------------- UTILITY ----------------
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Validate comment text (no links, no SQL keywords)
+function validateCommentText(text) {
+  const trimmed = text.trim();
+  if(!trimmed) return {valid:false, error:"Comment cannot be empty"};
+
+  const urlPattern = /(https?:\/\/[^\s]+)/gi;
+  if(urlPattern.test(trimmed)) return {valid:false, error:"Links are not allowed"};
+
+  const sqlPattern = /\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|EXEC|UNION)\b/i;
+  if(sqlPattern.test(trimmed)) return {valid:false, error:"Invalid content"};
+
+  if(trimmed.length > 500) return {valid:false, error:"Comment too long"};
+
+  return {valid:true};
+}
 
 // ---------------- TOGGLE COMMENTS ----------------
 toggleBtn.onclick = () => {
@@ -884,11 +906,11 @@ input.oninput = () => { autoResize(input); updateBtn(input, commentActionBtn); }
 // ---------------- BUTTON STATE ----------------
 function updateBtn(textarea, button){
   if(textarea.value.trim()){
-    button.textContent="Post";
-    button.className="px-4 py-2 rounded-2xl bg-neon text-black text-sm";
+    button.textContent = "Post";
+    button.className = "px-4 py-2 rounded-2xl bg-neon text-black text-sm";
   } else {
-    button.textContent="🎤";
-    button.className="w-12 h-12 rounded-full bg-gray-200 text-xl";
+    button.innerHTML = '<i class="ph ph-microphone"></i>';
+    button.className = "w-12 h-12 rounded-full bg-gray-200 text-xl";
   }
 }
 
@@ -902,7 +924,13 @@ function getCSRFToken(){
 async function handleAction(textarea, button, callback, overlay=null, isReply=false){
   const parent_id = textarea.dataset.parentId || null;
 
+  // POST TEXT COMMENT
   if(textarea.value.trim()){
+    const validation = validateCommentText(textarea.value);
+    if(!validation.valid){
+      alert(validation.error);
+      return;
+    }
     await callback({text: textarea.value.trim(), parent_id});
     textarea.value="";
     autoResize(textarea);
@@ -910,9 +938,11 @@ async function handleAction(textarea, button, callback, overlay=null, isReply=fa
     return;
   }
 
+  // STOP existing recorder if running
   if(isReply && activeReplyRecorder){ activeReplyRecorder.stop(); return; }
   if(!isReply && activeRecorder){ activeRecorder.stop(); return; }
 
+  // START audio recording
   const stream = await navigator.mediaDevices.getUserMedia({audio:true});
   const recorder = new MediaRecorder(stream);
   const chunks = [];
@@ -987,10 +1017,7 @@ if(postLikeBtn){
       });
       const data = await res.json();
       if(res.ok){
-        // Update count
         postLikeCount.textContent = data.likes_count;
-
-        // Update heart icon
         const heart = postLikeBtn.querySelector(".heartIcon");
         if(data.user_liked) heart.classList.add("liked");
         else heart.classList.remove("liked");
@@ -1045,23 +1072,26 @@ function attachCommentEvents(commentEl){
       const wrapper = document.createElement("div");
       wrapper.className = "flex gap-3 relative";
       const avatar = document.createElement("img");
-      avatar.src="/static/avatar.png";
+      avatar.src = "{% static 'images/users.jpg' %}";
       avatar.className="w-10 h-10 rounded-full";
       const textarea = document.createElement("textarea");
-      textarea.className="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm";
+      textarea.className="flex-1 resize-none rounded-2xl border px-4 py-3 text-sm bg-transparent";
       textarea.rows=1;
       textarea.placeholder="Add a reply…";
       textarea.dataset.parentId=commentId;
       const overlay=document.createElement("div");
       overlay.className="recordingOverlay hidden absolute inset-0 flex items-center justify-center pointer-events-none";
       overlay.innerHTML=`<div class="recordingWave"></div><span class="ml-2 recordingTimer">0s</span>`;
-      const actionBtn=document.createElement("button");
-      actionBtn.className="w-12 h-12 rounded-full bg-gray-200 text-xl";
-      actionBtn.textContent="🎤";
+      const actionBtn = document.createElement("button");
+      actionBtn.className = "w-12 h-12 rounded-full bg-gray-200 text-xl";
+      actionBtn.innerHTML = '<i class="ph ph-microphone"></i>';
+
       wrapper.append(avatar, textarea, overlay, actionBtn);
       container.appendChild(wrapper);
       commentEl.querySelector(".flex-1").appendChild(container);
       textarea.oninput = ()=>{ autoResize(textarea); updateBtn(textarea, actionBtn); };
+
+      // Apply validation for replies
       actionBtn.onclick = ()=>handleAction(textarea, actionBtn, postComment, overlay, true);
     };
   }
@@ -1070,38 +1100,79 @@ function attachCommentEvents(commentEl){
 // ---------------- INITIALIZE ----------------
 document.querySelectorAll(".commentItem").forEach(el => attachCommentEvents(el));
 
-// ---------------- ADD COMMENT TO UI ----------------
-function addCommentToUI({id, text="", audio="", username="You", avatar="/static/avatar.png", parent_id=null, likes_count=0}){
+// ---------------- ADD COMMENT TO UI (SAFE) ----------------
+function addCommentToUI({id, text="", audio="", username="You", parent_id=null, likes_count=0}){
   const c = document.createElement("div");
   c.className="commentItem";
   c.dataset.commentId=id;
-  c.innerHTML = `
-    <div class="flex gap-3">
-      <img src="${avatar}" class="w-9 h-9 rounded-full">
-      <div class="flex-1">
-        <div class="font-semibold text-sm">${username}</div>
-        ${text ? `<div class="bg-gray-100 p-3 rounded-2xl mt-1">${text}</div>` : ""}
-        ${audio ? `<audio controls class="mt-2 w-full"><source src="${audio}"></audio>` : ""}
-        <div class="flex items-center gap-4 mt-1 text-sm text-gray-500">
-          <button class="replyBtn">Reply</button>
-          <button class="likeBtn flex items-center gap-1">
-            <svg class="w-4 h-4 heartIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318 1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
-            </svg>
-            <span class="likeCount">${likes_count}</span>
-          </button>
-          <button class="deleteBtn">Delete</button>
-        </div>
-        <div class="replies ml-8 mt-2"></div>
-      </div>
-    </div>`;
+
+  const flex1 = document.createElement("div");
+  flex1.className = "flex-1";
+
+  // USERNAME
+  const userDiv = document.createElement("div");
+  userDiv.className = "font-semibold text-sm";
+  userDiv.textContent = username;
+
+  // TEXT COMMENT
+  if(text){
+    const textDiv = document.createElement("div");
+    textDiv.className="bg-gray-100 p-3 rounded-2xl mt-1";
+    textDiv.textContent = text; // ESCAPED
+    flex1.appendChild(textDiv);
+  }
+
+  // AUDIO COMMENT
+  if(audio){
+    const audioEl = document.createElement("audio");
+    audioEl.controls = true;
+    audioEl.className = "mt-2 w-full";
+    const source = document.createElement("source");
+    source.src = audio;
+    audioEl.appendChild(source);
+    flex1.appendChild(audioEl);
+  }
+
+  // REPLY / LIKE / DELETE
+  const actionsDiv = document.createElement("div");
+  actionsDiv.className="flex items-center gap-4 mt-1 text-sm text-gray-500";
+  actionsDiv.innerHTML = `
+    <button class="replyBtn">Reply</button>
+    <button class="likeBtn flex items-center gap-1">
+      <svg class="w-4 h-4 heartIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318 1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
+      </svg>
+      <span class="likeCount">${likes_count}</span>
+    </button>
+    <button class="deleteBtn">Delete</button>
+  `;
+  flex1.appendChild(userDiv);
+  flex1.appendChild(actionsDiv);
+
+  // REPLIES container
+  const repliesDiv = document.createElement("div");
+  repliesDiv.className = "replies ml-8 mt-2";
+  flex1.appendChild(repliesDiv);
+
+  // MAIN comment wrapper
+  const commentWrapper = document.createElement("div");
+  commentWrapper.className="flex gap-3";
+  const avatar = document.createElement("img");
+  avatar.src="{% static 'images/users.jpg' %}";
+  avatar.className="w-9 h-9 rounded-full";
+  commentWrapper.appendChild(avatar);
+  commentWrapper.appendChild(flex1);
+  c.appendChild(commentWrapper);
+
+  // APPEND to DOM
   if(parent_id){
     const parentEl = document.querySelector(`.commentItem[data-comment-id='${parent_id}'] .replies`);
     if(parentEl) parentEl.appendChild(c);
   } else {
     list.prepend(c);
   }
+
   attachCommentEvents(c);
   comments.style.maxHeight = comments.scrollHeight+"px";
 }

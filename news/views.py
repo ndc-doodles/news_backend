@@ -15,6 +15,7 @@ from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.sessions.models import Session
+import re
 
 MAX_ATTEMPTS = 5
 LOCKOUT_TIME = 60 * 60  # 1 hour in seconds
@@ -478,6 +479,15 @@ def newsview(request, post_id):
     })
 
 
+# Patterns
+USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9_.-]{3,30}$')  # letters, numbers, _.- allowed
+EMAIL_PATTERN = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
+SQL_PATTERN = re.compile(r'\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|EXEC|UNION)\b', re.IGNORECASE)
+MAX_USERNAME = 30
+MAX_PASSWORD = 128
+
+
+# ---------------- SIGNUP ----------------
 @require_POST
 @csrf_exempt
 def signup_ajax(request):
@@ -486,53 +496,62 @@ def signup_ajax(request):
     password = request.POST.get("password", "")
     confirm = request.POST.get("confirm", "")
 
+    # 1️⃣ Check required fields
     if not all([username, email, password, confirm]):
         return JsonResponse({"success": False, "error": "All fields are required"})
 
+    # 2️⃣ Validate username
+    if not USERNAME_PATTERN.match(username):
+        return JsonResponse({"success": False, "error": "Invalid username. Use 3-30 letters, numbers, _.- only."})
+    if SQL_PATTERN.search(username):
+        return JsonResponse({"success": False, "error": "Invalid username content."})
+
+    # 3️⃣ Validate email
+    if not EMAIL_PATTERN.match(email):
+        return JsonResponse({"success": False, "error": "Invalid email address"})
+    if SQL_PATTERN.search(email):
+        return JsonResponse({"success": False, "error": "Invalid email content."})
+
+    # 4️⃣ Validate password
     if password != confirm:
         return JsonResponse({"success": False, "error": "Passwords do not match"})
+    if len(password) < 6 or len(password) > MAX_PASSWORD:
+        return JsonResponse({"success": False, "error": "Password must be 6-128 characters"})
 
+    # 5️⃣ Check duplicates
     if Signup.objects.filter(username=username).exists():
         return JsonResponse({"success": False, "error": "Username already exists"})
-
     if Signup.objects.filter(email=email).exists():
         return JsonResponse({"success": False, "error": "Email already registered"})
 
-    # Create Signup entry
+    # 6️⃣ Create Signup entry
     signup = Signup.objects.create(
         username=username,
         email=email,
         password=make_password(password)
     )
 
-    # ✅ Get or create Django User
+    # 7️⃣ Create Django User
     user, created = User.objects.get_or_create(
         username=signup.username,
         defaults={"email": signup.email}
     )
-
     if created:
         user.set_password(password)
         user.save()
 
-    # ✅ Get or create Profile
+    # 8️⃣ Create Profile
     profile, _ = Profile.objects.get_or_create(
         user=user,
-        defaults={
-            "email": signup.email,
-            "provider": "local"
-        }
+        defaults={"email": signup.email, "provider": "local"}
     )
 
-    # ✅ Auto-login the user
-    login(
-        request,
-        user,
-        backend="django.contrib.auth.backends.ModelBackend"
-    )
-
+    # 9️⃣ Auto-login
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     return JsonResponse({"success": True})
 
+
+# ---------------- LOGIN ----------------
 @require_POST
 @csrf_exempt
 def login_ajax(request):
@@ -542,7 +561,13 @@ def login_ajax(request):
     if not username_or_email or not password:
         return JsonResponse({"success": False, "error": "All fields are required"})
 
-    # 1️⃣ Find user in Signup table
+    # Validate input lengths
+    if len(username_or_email) > 100 or len(password) > MAX_PASSWORD:
+        return JsonResponse({"success": False, "error": "Invalid input length"})
+    if SQL_PATTERN.search(username_or_email):
+        return JsonResponse({"success": False, "error": "Invalid characters in username/email"})
+
+    # Find user
     try:
         signup = Signup.objects.get(username=username_or_email)
     except Signup.DoesNotExist:
@@ -551,49 +576,33 @@ def login_ajax(request):
         except Signup.DoesNotExist:
             return JsonResponse({"success": False, "error": "Invalid credentials"})
 
-    # 2️⃣ Check password
+    # Check password
     if not check_password(password, signup.password):
         return JsonResponse({"success": False, "error": "Invalid credentials"})
 
-    # 3️⃣ Get or create Django User
-    user, created = User.objects.get_or_create(
-        username=signup.username,
-        defaults={"email": signup.email}
-    )
-
+    # Get or create Django User and Profile
+    user, created = User.objects.get_or_create(username=signup.username, defaults={"email": signup.email})
     if created:
         user.set_password(password)
         user.save()
+    profile, _ = Profile.objects.get_or_create(user=user, defaults={"email": signup.email, "provider": "local"})
 
-    # 4️⃣ Get or create Profile (VERY IMPORTANT)
-    profile, _ = Profile.objects.get_or_create(
-        user=user,
-        defaults={
-            "email": signup.email,
-            "provider": "local"
-        }
-    )
-
-    # 5️⃣ Login user (backend REQUIRED because of Google auth)
-    login(
-        request,
-        user,
-        backend="django.contrib.auth.backends.ModelBackend"
-    )
-
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     return JsonResponse({"success": True})
 
 
-
+# ---------------- FORGOT PASSWORD ----------------
 @require_POST
 @csrf_exempt
 def forgot_password_ajax(request):
     username_or_email = request.POST.get("username", "").strip()
-
     if not username_or_email:
         return JsonResponse({"success": False, "error": "Please enter username or email"})
 
-    # Look up user by username or email
+    if len(username_or_email) > 100 or SQL_PATTERN.search(username_or_email):
+        return JsonResponse({"success": False, "error": "Invalid input"})
+
+    # Find user
     try:
         user = Signup.objects.get(username=username_or_email)
     except Signup.DoesNotExist:
@@ -602,16 +611,15 @@ def forgot_password_ajax(request):
         except Signup.DoesNotExist:
             return JsonResponse({"success": False, "error": "User not found"})
 
-    # Generate reset token
+    # Generate reset token and send email
     token = user.generate_reset_token()
-    reset_link = f"http://127.0.0.1:8000/reset-password/{token}/"  # change domain in production
+    reset_link = f"http://127.0.0.1:8000/reset-password/{token}/"
 
-    # Send email via Brevo SMTP
     try:
         send_mail(
             subject="Reset Your Password",
             message=f"Hello {user.username},\n\nClick this link to reset your password:\n{reset_link}\n\nThis link expires in 1 hour.",
-            from_email="News App <no-reply@smtp-brevo.com>",  # verified sender
+            from_email="News App <no-reply@smtp-brevo.com>",
             recipient_list=[user.email],
             fail_silently=False,
         )
@@ -619,8 +627,6 @@ def forgot_password_ajax(request):
         return JsonResponse({"success": False, "error": f"Failed to send email: {str(e)}"})
 
     return JsonResponse({"success": True, "message": "Password reset link sent to your email."})
-
-
 
 def reset_password_view(request, token):
     user = Signup.objects.filter(
@@ -652,18 +658,34 @@ def reset_password_view(request, token):
     return render(request, "reset_password.html")
 
 
+# Patterns for validation
+URL_PATTERN = re.compile(r'https?://\S+', re.IGNORECASE)
+SQL_PATTERN = re.compile(r'\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|EXEC|UNION)\b', re.IGNORECASE)
+MAX_COMMENT_LENGTH = 500
+
+
 @login_required
 @require_POST
 def add_comment(request):
     post_id = request.POST.get("post_id")
-    text = request.POST.get("text", "")
+    text = request.POST.get("text", "").strip()
     audio = request.FILES.get("audio")
-    parent_id = request.POST.get("parent_id")  # new field for replies
+    parent_id = request.POST.get("parent_id")  # for replies
 
     if not post_id:
         return JsonResponse({"error": "Post ID missing"}, status=400)
+
     if not text and not audio:
         return JsonResponse({"error": "Empty comment"}, status=400)
+
+    # Validate text if present
+    if text:
+        if len(text) > MAX_COMMENT_LENGTH:
+            return JsonResponse({"error": "Comment too long"}, status=400)
+        if URL_PATTERN.search(text):
+            return JsonResponse({"error": "Links are not allowed"}, status=400)
+        if SQL_PATTERN.search(text):
+            return JsonResponse({"error": "Invalid content"}, status=400)
 
     post = get_object_or_404(Post, id=post_id)
     profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -685,7 +707,7 @@ def add_comment(request):
         "text": comment.text,
         "audio": comment.audio.url if comment.audio else "",
         "username": request.user.username,
-        "avatar": profile.avatar or "/static/avatar.png",
+        "avatar": profile.avatar.url if profile.avatar else "/static/avatar.png",
         "parent_id": parent.id if parent else None,
         "likes_count": 0
     })
