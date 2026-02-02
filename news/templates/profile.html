@@ -1,0 +1,1660 @@
+{% load static %}
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="Markets React to Global Oil Prices">
+<meta property="og:description" content="Interesting read on how global oil prices are impacting markets.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.description|truncatechars:160 }}">
+<meta property="og:image" content="{% if post.image %}{{ post.image.url }}{% endif %}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+
+<title>Explore</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+<link rel="stylesheet" href="{% static 'css/style.css' %}" />
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: { neon: '#00ffe1' }
+    }
+  }
+}
+</script>
+
+<style>
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 50;
+  height: 100vh;
+  width: 100%;
+  max-width: 420px;
+
+  background-color: rgba(24,24,27,0.95);
+  backdrop-filter: blur(6px);
+  border-left: 1px solid rgba(255,255,255,0.1);
+
+  transform: translateX(100%);   /* CLOSED → offscreen right */
+  transition: transform 0.3s ease;
+}
+
+/* OPEN → slides right → left */
+.drawer.open {
+  transform: translateX(0);
+}
+
+
+/* CLOSE: left → right */
+.drawer.closing {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* ================= BACKDROP ================= */
+#backdrop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.6);
+  z-index: 40;
+}
+
+#backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ================= IG-STYLE TILE HOVER ================= */
+.card img {
+  transition: transform 0.35s ease;
+}
+
+.card:hover img {
+  transform: scale(1.05);
+}
+
+
+
+
+</style>
+
+</head>
+
+<body class="overflow-x-hidden" >
+
+
+
+<!-- ================= NAVBAR ================= -->
+<nav id="navbar"
+     class="fixed top-0 inset-x-0 z-50 transition-colors duration-300 bg-transparent border-b border-transparent">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+
+    <!-- TITLE -->
+    <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">
+     Explore
+    </h1>
+
+    <!-- RIGHT CONTROLS: HAMBURGER + THEME TOGGLE -->
+    <div class="flex items-center gap-3">
+
+      <!-- THEME TOGGLE (DESKTOP ONLY) -->
+    <div class="hidden md:flex items-center">
+      <div class="toggle-button-container">
+        <div class="btn btn-pill" id="button-9">
+          <input type="checkbox" class="checkbox" id="themeToggle">
+          <div class="knob">
+            <i class="ph ph-sun icon-sun"></i>
+            <i class="ph ph-moon icon-moon"></i>
+            <span></span>
+          </div>
+          <div class="btn-bg"></div>
+        </div>
+      </div>
+    </div>
+
+      <!-- HAMBURGER TOGGLE -->
+      <button id="navToggle" class="text-2xl px-2 hover:text-neon transition select-none">
+        ☰
+      </button>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ================= DRAWER ================= -->
+<div id="navDrawer"
+     class="fixed top-0 right-0 z-50 h-screen w-full sm:w-[420px]
+            bg-zinc-900/95 backdrop-blur border-l border-white/10
+            transition-transform duration-300 ease-out translate-x-full flex flex-col justify-between">
+
+  <!-- TOP: CLOSE BUTTON & THEME TOGGLE -->
+  <div class="p-6 space-y-5 overflow-y-auto">
+    <div class="flex items-center justify-between mb-4">
+      <!-- Drawer Header -->
+      <h2 class="font-semibold text-lg ">Menu</h2>
+      <button id="closeDrawer" class="text-2xl hover:text-neon">✕</button>
+    </div>
+
+
+    <!-- NAV LINKS -->
+    <nav class="flex flex-col gap-3 mt-6  text-lg">
+      <a href="{% url 'index' %}" class="hover:text-red-500">Home</a>
+      <a href="" >My Account</a>
+      <a href="" >Recent Posts</a>
+      <a href="" >Categories</a>
+      <a href="" >About Us</a>
+      <a href="" >Contact</a>
+    </nav>
+
+      <!-- MOBILE THEME TOGGLE -->
+      <div class="md:hidden flex items-center justify-between w-full mt-4">
+        <span class="text-sm font-medium select-none">Theme</span>
+        <div class="toggle-button-container">
+          <div class="btn btn-pill" id="button-9-mobile">
+            <input type="checkbox" class="checkbox" id="themeToggleMobile">
+            <div class="knob">
+              <i class="ph ph-sun icon-sun"></i>
+              <i class="ph ph-moon icon-moon"></i>
+              <span></span>
+            </div>
+            <div class="btn-bg"></div>
+          </div>
+        </div>
+      </div>
+
+  </div>
+
+<div class="p-6 border-t">
+    {% if user.is_authenticated %}
+      <a href="{% url 'logout' %}?next={{ request.path }}"
+         class="block text-red-400 hover:text-red-500 font-semibold"><i class="ph ph-sign-out text-lg"></i> Logout</a>
+    {% else %}
+      <h3 onclick="openModal()"
+          class="cursor-pointer  font-semibold">Login</h3>
+    {% endif %}
+  </div>
+
+
+</div>
+
+<!-- BACKDROP -->
+<div id="backdrop" class="hidden fixed inset-0 bg-black/60 z-40"></div>
+
+
+<script>
+  // ===== CONFIG =====
+  const headline = "Markets React to Global Oil Prices";
+  const githubHostedLink = "https://username.github.io/NEWS_FRONTEND/newsview.html";
+
+  // ===== SHARE BUTTON =====
+  document.getElementById("shareBtn").addEventListener("click", async () => {
+    // Use hosted link if on localhost, otherwise current page
+    const articleLink = window.location.hostname.includes("localhost")
+      ? githubHostedLink
+      : window.location.href;
+
+    const shareText = `${headline}\n${articleLink}`;
+
+    const shareData = {
+      title: headline,
+      text: shareText,
+      url: articleLink
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log("Share cancelled");
+      }
+    } else {
+      openShareFallback(shareText, articleLink);
+    }
+  });
+
+  // ===== FALLBACK POPUP =====
+  function openShareFallback(text, url) {
+    const encodedText = encodeURIComponent(text);
+    const encodedURL = encodeURIComponent(url);
+
+    const popup = `
+      <div id="sharePopup"
+        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-6 w-80 space-y-4">
+          <h3 class="font-bold text-lg">Share</h3>
+
+          <a href="https://wa.me/?text=${encodedText}" target="_blank" class="block">WhatsApp</a>
+          <a href="https://twitter.com/intent/tweet?text=${encodedText}" target="_blank" class="block">X / Twitter</a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u=${encodedURL}" target="_blank" class="block">Facebook</a>
+          <a href="mailto:?subject=${encodeURIComponent(headline)}&body=${encodedText}" class="block">Email</a>
+
+          <button onclick="document.getElementById('sharePopup').remove()"
+            class="mt-4 w-full bg-gray-100 rounded-lg py-2">
+            Close
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", popup);
+  }
+</script>
+
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999]">
+  <div id="modalContent" class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001]">
+    <button onclick="closeModal('loginModal')" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+
+    <h2 class="text-2xl font-bold text-center">Welcome Back</h2>
+    <p class="text-center text-gray-500 mb-6">Login to continue</p>
+
+   <a href="{% provider_login_url 'google' process='login' next=request.path %}"
+   class="w-full flex items-center justify-center gap-3 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition duration-200 shadow-sm">
+    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google logo" class="w-5 h-5">
+    <span class="text-sm font-medium text-gray-700">Continue with Google</span>
+</a>
+
+
+
+
+
+
+
+    <div class="flex items-center gap-4 mb-5">
+      <hr class="flex-1">
+      <span class="text-gray-400 text-sm">or</span>
+      <hr class="flex-1">
+    </div>
+
+    <input id="username" type="text" placeholder="Username or email" class="w-full px-4 py-2 mb-4 border border-gray-400 rounded-lg bg-transparent placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
+
+    <input id="password" type="password" placeholder="Password" class="w-full px-4 py-2 mb-2 border border-gray-400 rounded-lg bg-transparent placeholder-gray-500 focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-indigo-500">
+
+   <div class="text-right mb-4">
+ <a href="#" onclick="openModal('forgot')" class="text-sm text-indigo-600 hover:underline">
+  Forgot password?
+</a>
+
+</div>
+
+
+    <button id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold transition">
+      Login
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+  Don't have an account?
+  <a href="#" onclick="openModal('signup')" class="text-indigo-600 hover:underline">
+  Sign up
+</a>
+
+</p>
+      </div>
+</div>
+
+
+<!-- SIGNUP MODAL -->
+<div
+  id="signupModal"
+  class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999] pointer-events-auto
+"
+>
+  <div
+    class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001] pointer-events-auto"
+  >
+
+    <!-- CLOSE -->
+    <button
+      type="button"
+      onclick="closeModal('signupModal')"
+      class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl"
+    >
+      &times;
+    </button>
+
+    <h2 class="text-2xl font-bold text-center">Create Account</h2>
+    <p class="text-center text-gray-500 mb-6">Sign up to continue</p>
+
+    <input
+      id="signupUsername"
+      type="text"
+      placeholder="Username"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupEmail"
+      type="email"
+      placeholder="Email"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupPassword"
+      type="password"
+      placeholder="Password"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <input
+      id="signupConfirm"
+      type="password"
+      placeholder="Confirm Password"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <p id="signupError" class="text-red-600 text-sm mb-4 hidden"></p>
+
+    <!-- IMPORTANT FIX -->
+    <button
+      id="signupBtn"
+      type="button"
+      class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold"
+    >
+      Sign Up
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+      Already have an account?
+      <a
+        href="#"
+        onclick="openModal('login')"
+        class="text-indigo-600 hover:underline"
+      >
+        Login
+      </a>
+    </p>
+
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div id="forgotModal" class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-[9999]">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl p-8 relative mx-4 z-[10001]">
+
+    <!-- CLOSE -->
+    <button onclick="closeModal('forgotModal')" class="absolute right-4 top-4 text-gray-400 hover:text-gray-600 text-xl">
+      &times;
+    </button>
+
+    <h2 class="text-2xl font-bold text-center">Forgot Password</h2>
+    <p class="text-center text-gray-500 mb-6">
+      Enter your username or email to reset password
+    </p>
+
+    <input
+      id="forgotUsername"
+      type="text"
+      placeholder="Username or email"
+      class="w-full px-4 py-2 mb-4 border rounded-lg"
+    >
+
+    <p id="forgotError" class="text-red-600 text-sm mb-4 hidden"></p>
+
+    <button id="forgotBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold">
+      Reset Password
+    </button>
+
+    <p class="text-center text-gray-500 mt-6">
+      Remembered your password?
+      <a href="#" onclick="openModal('login')" class="text-indigo-600 hover:underline">
+        Login
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- SUCCESS / FAIL LAYER -->
+<div id="successLayer" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-white z-[10000]">
+  <div class="relative flex flex-col items-center justify-center">
+    <div id="pulseBg" class="hidden pulse-bg"></div>
+    <div id="spinner" class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+    <svg id="checkmark" class="hidden w-20 h-20 text-green-500 mb-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    </svg>
+    <svg id="cross" class="hidden w-20 h-20 text-red-500 mb-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 6L18 18M6 18L18 6"/>
+    </svg>
+  </div>
+  <p id="successText" class="mt-4 text-lg font-semibold text-green-600 hidden text-success"></p>
+  <p id="failText" class="mt-4 text-lg font-semibold text-red-600 hidden text-fail"></p>
+</div>
+
+
+
+<div class="flex h-full">
+
+  <!-- SIDEBAR -->
+  <aside
+    id="sidebar"
+    class="h-full pb-8 w-80
+           border-r border-gray-200
+           shadow-[4px_0_10px_rgba(0,0,0,0.1)]
+           transition-all duration-300
+           relative flex-shrink-0 "
+  >
+
+    <!-- TOGGLE BUTTON -->
+    <button
+      id="sidebarToggle"
+      class="absolute top-1/2 right-0
+             -translate-y-1/2 translate-x-1/2
+              p-2 rounded-full shadow-md
+             hover:bg-gray-100 transition z-20"
+    >
+      <i id="toggleIcon" class="ph ph-caret-left text-lg"></i>
+    </button>
+
+    <!-- SIDEBAR CONTENT -->
+    <div
+      id="sidebarContent"
+      class="px-4 h-full pt-24 flex flex-col items-start transition-all duration-300"
+    >
+
+<!-- PROFILE -->
+<div
+  id="profileSection"
+  class="mb-8 w-full flex justify-center transition-all duration-300"
+>
+  <div class="relative w-24 h-24 group">
+
+    <!-- Profile Image -->
+    <img
+      id="profileImage"
+      src="{% static 'images/person.jpg' %}"
+      class="w-full h-full rounded-full object-cover"
+      alt="Profile"
+    >
+
+    <!-- Hidden File Input -->
+    <input
+      type="file"
+      id="profileImageInput"
+      accept="image/*"
+      class="hidden"
+    >
+
+    <!-- Camera Button -->
+   <label
+  for="profileImageInput"
+  id="changeProfileBtn"
+  class="absolute bottom-2 right-2
+          p-2 rounded-full shadow-md
+         cursor-pointer
+         transition-all duration-300
+         hover:bg-gray-100 hover:scale-110"
+>
+  <i class="ph ph-camera text-lg"></i>
+</label>
+<input
+  type="file"
+  id="profileImageInput"
+  accept="image/*"
+  class="hidden"
+>
+
+
+  </div>
+</div>
+
+      <!-- MENU -->
+      <div class="profile_menu w-full flex flex-col gap-2 pl-4 mt-4 items-start">
+
+        <button id="profileBtn" class="menu-item w-full h-12 pl-4 active">
+  <i class="ph ph-user"></i>
+  <span class="menu-text">Profile</span>
+</button>
+
+<button id="notificationsBtn" class="menu-item w-full pl-4 h-12">
+  <i class="ph ph-bell"></i>
+  <span class="menu-text">Notifications</span>
+</button>
+
+<button id="likesBtn" class="menu-item w-full pl-4 h-12">
+  <i class="ph ph-heart"></i>
+  <span class="menu-text">Likes</span>
+</button>
+
+<button id="uploadsBtn" class="menu-item w-full pl-4 h-12">
+  <i class="ph ph-upload"></i>
+  <span class="menu-text">Uploads</span>
+</button>
+
+<button id="upgradeBtn" class="menu-item w-full pl-4 h-12">
+  <i class="ph ph-sketch-logo"></i>
+  <span class="menu-text">Upgrade</span>
+</button>
+
+<button id="earningsBtn" class="menu-item w-full pl-4 h-12">
+  <i class="ph ph-currency-inr"></i>
+  <span class="menu-text">Earnings</span>
+</button>
+
+
+        <button class="menu-item w-full pl-4 h-12">
+          <i class="ph ph-sign-out"></i>
+          <span class="menu-text">Logout</span>
+        </button>
+
+      </div>
+
+    </div>
+  </aside>
+
+    <main class="flex-1 p-20 mt-5">
+
+  <!-- PROFILE SECTION -->
+  <div id="profileSectionMain">
+
+    <h1 class="text-[2rem] mb-6">
+      Hi, <span class="font-medium">User</span>
+    </h1>
+
+    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+
+      <!-- PROFILE EDIT -->
+      <div class="rounded-2xl border border-gray-200 p-8">
+        <h2 class="text-xl font-semibold mb-6">Edit Profile</h2>
+
+        <form class="space-y-6">
+          <div>
+            <label class="text-sm font-medium mb-1 block">Username</label>
+            <input type="text" value="username_here" readonly
+              class="w-full bg-transparent border-0 border-b-2 border-gray-300
+                     py-2 text-gray-500 cursor-not-allowed focus:outline-none">
+          </div>
+
+          <div>
+            <label class="text-sm font-medium mb-1 block">Email</label>
+            <input type="email"
+              class="w-full bg-transparent border-0 border-b-2 border-gray-300
+                     py-2 focus:outline-none focus:border-blue-500">
+          </div>
+
+          <button class="w-full bg-blue-600 text-white py-2.5 rounded-lg
+                         hover:bg-blue-700 transition">
+            Update Profile
+          </button>
+        </form>
+      </div>
+
+      <!-- PROFILE INFO -->
+      <div class="rounded-2xl border border-gray-200 p-8">
+        <h2 class="text-xl font-semibold mb-6">Account Info</h2>
+
+        <div class="space-y-4">
+          <div class="flex justify-between border-b pb-2">
+            <span>Date Joined</span><span>12 Jan 2024</span>
+          </div>
+          <div class="flex justify-between border-b pb-2">
+            <span>Total Uploads</span><span>35</span>
+          </div>
+          <div class="flex justify-between border-b pb-2">
+            <span>Likes</span><span>3,566</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Earnings</span>
+            <span class="text-green-600 font-semibold">₹5,555</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<!-- NOTIFICATIONS SECTION -->
+<div id="notificationsSection" class="hidden max-w-3xl mx-auto">
+
+  <h2 class="text-2xl font-semibold mb-6">Notifications</h2>
+
+  <!-- Scroll container -->
+  <div
+    class="space-y-4 max-h-[420px] overflow-y-auto pr-2
+           scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+
+    <!-- Notification item -->
+    <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition">
+      <div class="w-10 h-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+        <i class="ph ph-heart"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-medium">New like on your post</p>
+        <p class="text-xs text-gray-500">2 minutes ago</p>
+      </div>
+    </div>
+
+    <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition">
+      <div class="w-10 h-10 flex items-center justify-center rounded-full bg-green-100 text-green-600">
+        <i class="ph ph-user-plus"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-medium">Someone followed you</p>
+        <p class="text-xs text-gray-500">1 hour ago</p>
+      </div>
+    </div>
+
+    <div class="flex items-start gap-4 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition">
+      <div class="w-10 h-10 flex items-center justify-center rounded-full bg-purple-100 text-purple-600">
+        <i class="ph ph-check-circle"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-medium">Upload approved</p>
+        <p class="text-xs text-gray-500">Yesterday</p>
+      </div>
+    </div>
+
+    <!-- Add more notifications here -->
+  </div>
+
+</div>
+
+
+ <!-- LIKES -->
+<div id="likesSection" class="hidden">
+  <h2 class="text-xl font-semibold mb-6">Liked Posts</h2>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+
+    <!-- Post Card -->
+    <div class="bg-gray-200 rounded-xl h-40 hover:shadow-lg transition cursor-pointer"></div>
+    <div class="bg-gray-200 rounded-xl h-40 hover:shadow-lg transition cursor-pointer"></div>
+    <div class="bg-gray-200 rounded-xl h-40 hover:shadow-lg transition cursor-pointer"></div>
+    <div class="bg-gray-200 rounded-xl h-40 hover:shadow-lg transition cursor-pointer"></div>
+    <div class="bg-gray-200 rounded-xl h-40 hover:shadow-lg transition cursor-pointer"></div>
+    <div class="bg-gray-200 rounded-xl h-40 hover:shadow-lg transition cursor-pointer"></div>
+
+  </div>
+</div>
+
+
+<!-- UPLOADS GRID -->
+<div id="uploadsSection" class="p-6 hidden ">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-semibold">Uploads</h2>
+    <button
+      class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+      onclick="openModal('addPostModal')"
+    >Add New Post
+    </button>
+  </div>
+
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+
+  {% for post in posts %}
+  <div class="group rounded-xl shadow hover:shadow-lg transition relative overflow-hidden">
+
+    {% if post.image %}
+      <img
+        src="{{ post.image.url }}"
+        alt="{{ post.title }}"
+        class="w-full h-40 object-cover"
+      />
+    {% elif post.video %}
+      <video
+        src="{{ post.video.url }}"
+        class="w-full h-40 object-cover"
+        muted
+      ></video>
+    {% endif %}
+
+   <button
+  onclick="viewPost(
+    '{{ post.id }}',
+    '{{ post.title|escapejs }}',
+    '{% if post.image %}{{ post.image.url }}{% elif post.video %}{{ post.video.url }}{% endif %}',
+    '{{ post.description|escapejs }}'
+  )"
+  class="absolute inset-0 m-auto flex items-center justify-center text-white text-3xl">
+  <i class="ph ph-eye"></i>
+</button>
+
+
+    <!-- Delete Button -->
+   <button
+  class="absolute top-2 right-2 text-red-600 text-xl hover:text-red-800 transition"
+  title="Delete Post"
+  onclick="deletePostFromGrid('{{ post.id }}')"
+>
+  <i class="ph ph-trash"></i>
+</button>
+
+
+  </div>
+  {% empty %}
+    <p class="col-span-full text-center text-gray-500">
+      You haven’t uploaded any posts yet.
+    </p>
+  {% endfor %}
+
+</div>
+
+</div>
+
+
+
+<!-- UPGRADE -->
+<div id="upgradeSection" class="hidden">
+  <h2 class="text-xl font-semibold mb-6">Plan & Upgrades</h2>
+
+  <!-- Current Plan -->
+  <div class="mb-8 p-5 border rounded-lg ">
+    <h3 class="text-lg font-semibold mb-2">Current Plan</h3>
+    <p class="">
+      <span class="font-medium">Free Plan</span> — Limited access
+    </p>
+    <ul class="mt-3 text-sm list-disc list-inside">
+      <li>Basic features</li>
+      <li>Limited usage</li>
+      <li>Email support</li>
+    </ul>
+  </div>
+
+  <!-- Upgrade Packages -->
+  <h3 class="text-lg font-semibold mb-4">Upgrade Packages</h3>
+
+  <div class="grid gap-6 md:grid-cols-3">
+
+    <!-- Basic -->
+    <div class="border rounded-lg p-5 hover:shadow-lg transition">
+      <h4 class="text-lg font-semibold mb-2">Basic</h4>
+      <p class="text-2xl font-bold mb-2">₹199<span class="text-sm font-normal">/month</span></p>
+      <ul class="text-sm  mb-4 list-disc list-inside">
+        <li>All Free features</li>
+        <li>Increased limits</li>
+        <li>Email support</li>
+      </ul>
+      <button
+        class="w-full bg-blue-600  py-2 rounded hover:bg-blue-700 transition">
+        Upgrade to Basic
+      </button>
+    </div>
+
+    <!-- Pro -->
+    <div class="border rounded-lg p-5 hover:shadow-lg transition ">
+      <h4 class="text-lg font-semibold mb-2">Pro</h4>
+      <p class="text-2xl font-bold mb-2">₹499<span class="text-sm font-normal">/month</span></p>
+      <ul class="text-sm  mb-4 list-disc list-inside">
+        <li>All Basic features</li>
+        <li>Unlimited usage</li>
+        <li>Priority support</li>
+      </ul>
+      <button
+        class="w-full bg-blue-600 py-2 rounded hover:bg-blue-700 transition">
+        Upgrade to Pro
+      </button>
+    </div>
+
+    <!-- Enterprise -->
+    <div class="border rounded-lg p-5 hover:shadow-lg transition">
+      <h4 class="text-lg font-semibold mb-2">Enterprise</h4>
+      <p class="text-2xl font-bold mb-2">Custom</p>
+      <ul class="text-sm  mb-4 list-disc list-inside">
+        <li>All Pro features</li>
+        <li>Dedicated manager</li>
+        <li>Custom integrations</li>
+      </ul>
+      <button
+        class="w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-900 transition">
+        Contact Sales
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- EARNINGS -->
+
+<div
+  id="earningsSection"
+  class="hidden
+         max-h-[calc(100vh-160px)]
+         overflow-y-auto
+         pr-3
+         no-scrollbar"
+>
+
+  <h2 class="text-xl font-semibold mb-6">Earnings</h2>
+
+  <!-- Summary Cards -->
+  <div class="grid gap-6 md:grid-cols-3 mb-8">
+
+    <div class="p-5 border rounded-lg bg-green-50">
+      <p class="text-sm ">Total Earned</p>
+      <p class="text-2xl font-bold text-green-700">₹12,450</p>
+    </div>
+
+    <div class="p-5 border rounded-lg">
+      <p class="text-sm ">Available Balance</p>
+      <p class="text-2xl font-bold">₹4,200</p>
+    </div>
+
+    <div class="p-5 border rounded-lg">
+      <p class="text-sm ">Paid Out</p>
+      <p class="text-2xl font-bold ">₹8,250</p>
+    </div>
+
+  </div>
+
+  <!-- Graph -->
+  <div class="p-6 border rounded-lg mb-8">
+    <h3 class="text-lg font-semibold mb-4">Reach vs Earnings</h3>
+    <canvas id="earningsChart" height="120"></canvas>
+  </div>
+
+  <!-- Payout Options -->
+  <div class="p-6 border rounded-lg">
+    <h3 class="text-lg font-semibold mb-4">Payout Options</h3>
+
+    <div class="grid gap-4 md:grid-cols-3">
+
+      <button class="p-4 border rounded-lg hover:bg-gray-50 transition">
+        <p class="font-medium">Bank Transfer</p>
+        <p class="text-sm text-gray-600">2–3 business days</p>
+      </button>
+
+      <button class="p-4 border rounded-lg hover:bg-gray-50 transition">
+        <p class="font-medium">UPI</p>
+        <p class="text-sm text-gray-600">Instant payout</p>
+      </button>
+
+      <button class="p-4 border rounded-lg hover:bg-gray-50 transition">
+        <p class="font-medium">Paytm / Wallet</p>
+        <p class="text-sm text-gray-600">Within 24 hours</p>
+      </button>
+
+    </div>
+
+    <button
+      class="mt-6 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+      Request Payout
+    </button>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const ctx = document.getElementById('earningsChart');
+
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [
+      {
+        label: 'Reach',
+        data: [120, 190, 300, 250, 220, 310, 400],
+        borderWidth: 2,
+        tension: 0.4
+      },
+      {
+        label: 'Earnings (₹)',
+        data: [150, 220, 480, 350, 300, 520, 650],
+        borderWidth: 2,
+        tension: 0.4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+</script>
+
+
+
+</main>
+
+</div>
+
+
+
+<script>
+  const sidebar = document.getElementById("sidebar");
+  const toggleBtn = document.getElementById("sidebarToggle");
+  const toggleIcon = document.getElementById("toggleIcon");
+  const profile = document.getElementById("profileSection");
+
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("w-20");
+    sidebar.classList.toggle("w-80");
+
+    // Hide/show profile section
+    profile.classList.toggle("hidden");
+
+    // Toggle caret icon
+    toggleIcon.classList.toggle("ph-caret-left");
+    toggleIcon.classList.toggle("ph-caret-right");
+  });
+</script>
+
+
+<style>
+/* ======================= */
+/* MENU BUTTON STYLES       */
+/* ======================= */
+.menu-item {
+  @apply w-full flex items-center gap-3 py-3 px-4
+         rounded-xl transition-all duration-300 justify-start cursor-pointer;
+  background-color: transparent; /* no background */
+   /* dark gray text */
+
+  /* Bottom border with rounded corners */
+  border-bottom: 2px solid #e5e7eb; /* light gray */
+  border-radius: 0.5rem;
+  text-align: left; /* keep text left */
+}
+
+/* Remove extra left padding when sidebar is collapsed */
+#sidebar.w-20 .menu-item {
+  padding-left: 0;
+}
+
+/* Hover effect */
+.menu-item:hover {
+  background-color: #f3f4f6; /* light hover background */
+  border-color: #3b82f6; /* blue border on hover */
+  color: #2563eb; /* blue text on hover */
+  transform: translateX(2px); /* subtle shift */
+}
+
+/* Active button */
+.menu-item.active {
+  background-color: #e0f2fe; /* light blue bg */
+  color: #1d4ed8; /* dark blue text */
+  border-color: #2563eb; /* solid blue border */
+  font-weight: 600;
+}
+
+/* Icon styling */
+.menu-item i {
+  font-size: 1.25rem;
+  min-width: 28px; /* keeps icons aligned */
+  text-align: center;
+  transition: color 0.3s;
+}
+
+/* Menu text animation */
+.menu-text {
+  @apply transition-all duration-300 overflow-hidden;
+  white-space: nowrap;
+  text-align: left; /* enforce left alignment */
+}
+
+/* Collapse sidebar: hide text smoothly */
+#sidebar.w-20 .menu-text {
+  width: 0;
+  opacity: 0;
+  margin-left: 0;
+  pointer-events: none;
+}
+
+/* ======================= */
+/* PROFILE IMAGE & CAMERA   */
+/* ======================= */
+#profileSection .group {
+  position: relative;
+  width: 12rem; /* w-48 */
+  height: 12rem; /* h-48 */
+}
+
+#profileSection .group img {
+  @apply w-full h-full rounded-full object-cover;
+}
+
+/* Camera button styling */
+#profileSection .group button#changeProfileBtn {
+  position: absolute;
+  bottom: 0.5rem; /* bottom-2 */
+  right: 0.5rem;  /* right-2 */
+  background-color: white;
+  color: #374151;
+  padding: 0.5rem; /* p-2 */
+  border-radius: 9999px; /* fully round */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: opacity 0.3s, transform 0.3s, background-color 0.3s, color 0.3s;
+  opacity: 1; /* visible by default */
+  pointer-events: auto;
+}
+
+/* Camera hover effect */
+#profileSection .group button#changeProfileBtn:hover {
+  background-color: #f3f4f6;
+  color: #2563eb;
+  transform: scale(1.1);
+}
+
+/* Hide camera button when sidebar is collapsed */
+#sidebar.w-20 .group button#changeProfileBtn {
+  opacity: 0;
+  pointer-events: none; /* cannot click */
+  transform: scale(1);  /* reset scale */
+}
+</style>
+
+<script>
+  const tabs = [
+    { btn: "profileBtn", section: "profileSectionMain" },
+    { btn: "notificationsBtn", section: "notificationsSection" },
+    { btn: "likesBtn", section: "likesSection" },
+    { btn: "uploadsBtn", section: "uploadsSection" },
+    { btn: "upgradeBtn", section: "upgradeSection" },
+    { btn: "earningsBtn", section: "earningsSection" },
+  ];
+
+  tabs.forEach(({ btn, section }) => {
+    document.getElementById(btn).addEventListener("click", () => {
+      tabs.forEach(({ btn, section }) => {
+        document.getElementById(section).classList.add("hidden");
+        document.getElementById(btn).classList.remove("active");
+      });
+
+      document.getElementById(section).classList.remove("hidden");
+      document.getElementById(btn).classList.add("active");
+    });
+  });
+
+
+</script>
+
+
+
+
+<!-- ADD POST MODAL -->
+<div id="addPostModal"
+     class="fixed inset-0 hidden flex items-start justify-center z-50 pt-24">
+
+  <div class="w-11/12 max-w-md p-6 rounded-2xl shadow-2xl border
+              bg-white dark:bg-gray-900
+              border-gray-200 dark:border-gray-700
+              relative">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        Add New Post
+      </h3>
+      <button
+        onclick="closeModal('addPostModal')"
+        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        ✕
+      </button>
+    </div>
+
+    <form
+      id="addPostForm"
+      method="POST"
+      enctype="multipart/form-data"
+      class="space-y-4">
+
+      {% csrf_token %}
+
+      <!-- Title -->
+   <input
+  type="text"
+  name="title"
+  placeholder="Post title"
+  class="w-full rounded-lg p-3
+ bg-white
+         border border-gray-700
+         text-gray-200
+         placeholder-gray-500
+         focus:outline-none focus:ring-1 focus:ring-blue-500"
+>
+
+      <!-- Category -->
+      <select
+        name="category"
+        class="w-full rounded-lg p-2 outline-none
+               bg-white
+               border border-gray-300 dark:border-gray-600
+               text-gray-900 dark:text-gray-100
+               focus:ring-2 focus:ring-blue-500"
+        required>
+        <option value="">Select category</option>
+        {% for cat in categories %}
+          <option value="{{ cat.id }}">{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- Description -->
+      <textarea
+        name="description"
+        placeholder="Write something..."
+        rows="3"
+        class="w-full rounded-lg p-2 outline-none
+               bg-transparent
+               border border-gray-300 dark:border-gray-600
+               text-gray-900 dark:text-gray-100
+               placeholder-gray-400 dark:placeholder-gray-500
+               focus:ring-2 focus:ring-blue-500"></textarea>
+
+      <!-- Media Upload -->
+      <label
+        for="mediaUpload"
+        class="flex flex-col items-center justify-center rounded-xl p-6 cursor-pointer transition
+               border-2 border-dashed
+               border-gray-300 dark:border-gray-600
+               hover:border-blue-500 dark:hover:border-blue-400">
+
+        <div id="uploadPlaceholder"
+             class="flex flex-col items-center gap-2
+                    text-gray-500 dark:text-gray-400">
+          <span class="text-sm">Click to upload image or video</span>
+          <span class="text-xs">PNG, JPG, MP4, WEBM</span>
+        </div>
+
+        <!-- Preview -->
+        <img id="imagePreview"
+             class="hidden max-h-48 rounded-lg border
+                    border-gray-200 dark:border-gray-700" />
+
+        <video id="videoPreview"
+               class="hidden max-h-48 rounded-lg border
+                      border-gray-200 dark:border-gray-700"
+               controls></video>
+
+        <input
+          id="mediaUpload"
+          type="file"
+          name="media"
+          accept="image/*,video/*"
+          class="hidden"
+          required>
+      </label>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          type="button"
+          onclick="closeModal('addPostModal')"
+          class="px-4 py-2 rounded-lg
+                 bg-gray-100 hover:bg-gray-200
+                 dark:bg-gray-800 dark:hover:bg-gray-700
+                 text-gray-800 dark:text-gray-200">
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="px-4 py-2 rounded-lg
+                 bg-blue-600 hover:bg-blue-700
+                 text-white">
+          Post
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- EDIT POST MODAL -->
+<div id="editPostModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl w-11/12 max-w-md p-6 relative">
+    <h3 class="text-lg font-semibold mb-4">Edit Post</h3>
+    <form id="editPostForm"
+      method="POST"
+      enctype="multipart/form-data"
+      class="space-y-4">
+
+  {% csrf_token %}
+
+  <input
+    type="text"
+    name="title"
+    id="editPostFormTitle"
+    class="w-full border rounded-lg p-2"
+    required>
+
+  <textarea
+    name="description"
+    id="editPostFormDescription"
+    class="w-full border rounded-lg p-2"
+    rows="3"></textarea>
+
+  <input
+    type="file"
+    name="media"
+    class="w-full">
+
+  <div class="flex justify-end gap-2">
+    <button type="button" onclick="closeModal('editPostModal')">Cancel</button>
+    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+      Save
+    </button>
+  </div>
+</form>
+
+  </div>
+</div>
+
+<!-- VIEW POST MODAL -->
+<div id="viewPostModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-auto p-4">
+  <div class="bg-white rounded-xl w-full max-w-4xl p-6 flex flex-col md:flex-row gap-6">
+
+    <!-- Left: Post Image -->
+    <div class="flex-1 flex justify-center items-start">
+      <img id="viewPostImage" src="" alt="Post Image" class="w-full max-w-sm rounded-lg object-cover" />
+    </div>
+
+    <!-- Right: Post Details -->
+    <div class="flex-1 flex flex-col justify-between">
+
+      <!-- Header -->
+      <div class="flex justify-between items-start mb-2">
+        <div>
+          <h3 class="text-lg font-semibold" id="viewPostTitle">Sample Post Title</h3>
+          <p id="viewPostDescription" class="text-gray-700 mt-1">This is a sample post description.</p>
+        </div>
+        <button class="text-green-600 px-2 py-1 rounded-lg bg-green-50 hover:bg-green-100 transition" onclick="editPost()">
+          <i class="ph ph-pencil"></i>
+        </button>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="flex gap-4 my-4 text-gray-700 font-medium">
+        <div><i class="ph ph-heart"></i><span id="likeCount">0</span></div>
+        <div><i class="ph ph-chat-circle"></i><span id="commentCount">0</span></div>
+        <div><i class="ph ph-chat-circle"></i> <span id="shareCount">0</span></div>
+      </div>
+
+      <!-- Metrics Graph -->
+<div class="mb-4 flex-1">
+  <h4 class="font-semibold mb-2">Post Reach</h4>
+  <canvas id="postMetricsChart" class="w-full h-64"></canvas>
+</div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-2 mt-4">
+        <button class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300" onclick="closeModal('viewPostModal')">Close</button>
+       <button
+  class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+  onclick="deletePost()">
+  Delete
+</button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let postChart;
+
+// Render chart only when modal is visible
+function renderPostMetrics(likes, comments, shares) {
+  const ctx = document.getElementById('postMetricsChart').getContext('2d');
+
+  // Destroy previous chart if exists
+  if (postChart) postChart.destroy();
+
+  postChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Likes', 'Comments', 'Shares'],
+      datasets: [{
+        label: 'Count',
+        data: [likes, comments, shares],
+        backgroundColor: ['#3B82F6', '#10B981', '#F59E0B']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+
+  // Update stats bar
+  document.getElementById('likeCount').innerText = likes;
+  document.getElementById('commentCount').innerText = comments;
+  document.getElementById('shareCount').innerText = shares;
+}
+
+// Updated viewPost to ensure chart renders after modal opens
+function viewPost(title, imageUrl, description, likes = 0, comments = 0, shares = 0) {
+  document.getElementById('viewPostTitle').innerText = title;
+  document.getElementById('viewPostImage').src = imageUrl;
+  document.getElementById('viewPostDescription').innerText = description;
+
+  // Pre-fill Edit modal
+  document.getElementById('editPostFormTitle').value = title;
+  document.getElementById('editPostFormDescription').value = description;
+
+  // Open modal first
+  openModal('viewPostModal');
+
+  // Delay chart rendering slightly to ensure canvas is visible
+  setTimeout(() => {
+    renderPostMetrics(likes, comments, shares);
+  }, 100);
+}
+</script>
+<script>
+let currentPostId = null;
+
+// CSRF
+function getCSRFToken() {
+  return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// MODALS
+function openModal(id) {
+  const modal = document.getElementById(id);
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+// VIEW
+function viewPost(id, title, mediaUrl, description) {
+  currentPostId = id;
+
+  document.getElementById("viewPostTitle").innerText = title;
+  document.getElementById("viewPostDescription").innerText = description;
+  document.getElementById("viewPostImage").src = mediaUrl;
+
+  document.getElementById("editPostFormTitle").value = title;
+  document.getElementById("editPostFormDescription").value = description;
+
+  openModal("viewPostModal");
+}
+
+// EDIT OPEN
+function editPost() {
+  closeModal("viewPostModal");
+  openModal("editPostModal");
+}
+
+// EDIT SUBMIT
+document.getElementById("editPostForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+
+  fetch(`/post/edit/${currentPostId}/`, {
+    method: "POST",
+    headers: { "X-CSRFToken": getCSRFToken() },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      closeModal("editPostModal");
+      location.reload();
+    } else {
+      alert(data.error);
+    }
+  });
+});
+
+// DELETE
+function deletePost() {
+  if (!confirm("Are you sure you want to delete this post?")) return;
+
+  fetch(`/post/delete/${currentPostId}/`, {
+    method: "POST",
+    headers: { "X-CSRFToken": getCSRFToken() }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) location.reload();
+  });
+}
+
+// DELETE FROM GRID
+function deletePostFromGrid(postId) {
+  currentPostId = postId;
+  deletePost();
+}
+</script>
+
+
+<footer class=" border-t  px-6 sm:px-10 lg:px-20 xl:px-28">
+  <div class="py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
+
+    <!-- BRAND / PLATFORM -->
+    <div>
+      <h2 class="text-2xl font-extrabold tracking-tight">
+        EXPLORE<span class="text-neon">.</span>
+      </h2>
+      <p class="mt-4 text-sm  leading-relaxed">
+        A modern platform for reading, publishing, and sharing news and blogs.
+        Stay informed, tell your story, and engage with ideas that matter.
+      </p>
+    </div>
+
+    <!-- READ -->
+    <div>
+      <h3 class="text-sm font-semibold uppercase tracking-wider">
+        Read
+      </h3>
+      <ul class="mt-4 space-y-2 text-sm ">
+        <li><a href="#" class="hover:underline">Latest News</a></li>
+        <li><a href="#" class="hover:underline">Popular Blogs</a></li>
+        <li><a href="#" class="hover:underline">Categories</a></li>
+        <li><a href="#" class="hover:underline">Editor's Picks</a></li>
+      </ul>
+    </div>
+
+    <!-- WRITE -->
+    <div>
+      <h3 class="text-sm font-semibold uppercase  tracking-wider">
+        Write
+      </h3>
+      <ul class="mt-4 space-y-2 text-sm ">
+        <li><a href="#" class="hover:underline">Create Post</a></li>
+        <li><a href="#" class="hover:underline">Writer Guidelines</a></li>
+        <li><a href="#" class="hover:underline">Community Rules</a></li>
+        <li><a href="#" class="hover:underline">Become a Contributor</a></li>
+      </ul>
+    </div>
+
+    <!-- NEWSLETTER -->
+    <div>
+      <h3 class="text-sm font-semibold uppercase  tracking-wider">
+        Stay Updated
+      </h3>
+      <p class="mt-4 text-sm ">
+        Weekly highlights from top news and blogs — straight to your inbox.
+      </p>
+
+      <form class="mt-4 flex">
+        <input
+          type="email"
+          placeholder="Your email address"
+          class="flex-1 rounded-l-lg border px-4 py-2 text-sm focus:outline-none"
+        />
+        <button
+          type="submit"
+          class="rounded-r-lg bg-black  px-4 text-sm hover:bg-gray-800">
+          Subscribe
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="border-t py-6 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500">
+    <p>
+      © {{ now|date:"Y" }} News Platform. All rights reserved.
+    </p>
+
+    <div class="flex gap-6 mt-4 md:mt-0">
+      <a href="#" class="hover:underline">Privacy</a>
+      <a href="#" class="hover:underline">Terms</a>
+      <a href="#" class="hover:underline">Contact</a>
+    </div>
+  </div>
+</footer>
+<!--</script>-->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="ig-heart" viewBox="0 0 24 24">
+    <path
+      d="M12.1 21.35l-1.1-1.02C5.14 15.24 2 12.39 2 8.5
+         2 5.42 4.42 3 7.5 3
+         9.24 3 10.91 3.81 12 5.08
+         13.09 3.81 14.76 3 16.5 3
+         19.58 3 22 5.42 22 8.5
+         22 12.39 18.86 15.24 13
+         20.34l-.9 1.01z"
+      fill="currentColor"
+    />
+  </symbol>
+</svg>
+
+
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+const toggle = document.getElementById('navToggle');
+const drawer = document.getElementById('navDrawer');
+const closeBtn = document.getElementById('closeDrawer');
+const backdrop = document.getElementById('backdrop');
+
+function openDrawer() {
+  drawer.classList.remove('translate-x-full');
+  backdrop.classList.remove('hidden');
+  backdrop.classList.add('visible');
+}
+
+function closeDrawer() {
+  drawer.classList.add('translate-x-full');
+  backdrop.classList.remove('visible');
+  setTimeout(() => backdrop.classList.add('hidden'), 300);
+}
+
+
+toggle.addEventListener('click', openDrawer);
+closeBtn.addEventListener('click', closeDrawer);
+backdrop.addEventListener('click', closeDrawer);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDrawer();
+});
+</script>
+<script>
+const desktopToggle = document.getElementById("themeToggle");
+const mobileToggle  = document.getElementById("themeToggleMobile");
+
+// ================= THEME STYLES =================
+const darkStyles = {
+  bodyBg: "#000",
+  bodyColor: "#fff",
+  navBg: "rgba(0,0,0,0.85)",
+  border: "rgba(255,255,255,0.1)",
+  inputBg: "#000",
+  inputColor: "#fff",
+  drawerBg: "rgba(24,24,27,0.95)"
+};
+
+const lightStyles = {
+  bodyBg: "#fff",
+  bodyColor: "#000",
+  navBg: "#fff",
+  border: "rgba(0,0,0,0.15)",
+  inputBg: "#fff",
+  inputColor: "#000",
+  drawerBg: "#f5f5f5"
+};
+
+// ================= APPLY THEME =================
+function applyTheme(theme) {
+  const s = theme === "dark" ? darkStyles : lightStyles;
+
+  document.body.style.backgroundColor = s.bodyBg;
+  document.body.style.color = s.bodyColor;
+
+  document.querySelector("nav").style.background = s.navBg;
+  document.querySelector("nav").style.borderColor = s.border;
+
+  document.querySelectorAll(".filter, select, input").forEach(el => {
+    el.style.backgroundColor = s.inputBg;
+    el.style.color = s.inputColor;
+    el.style.borderColor = s.border;
+  });
+
+  document.getElementById("navDrawer").style.background = s.drawerBg;
+
+  localStorage.setItem("theme", theme);
+}
+
+// ================= INIT =================
+const savedTheme = localStorage.getItem("theme") || "light";
+applyTheme(savedTheme);
+
+desktopToggle.checked = savedTheme === "dark";
+if (mobileToggle) mobileToggle.checked = desktopToggle.checked;
+
+// ================= SYNC TOGGLES =================
+desktopToggle.addEventListener("change", () => {
+  const theme = desktopToggle.checked ? "dark" : "light";
+  applyTheme(theme);
+  if (mobileToggle) mobileToggle.checked = desktopToggle.checked;
+});
+
+mobileToggle?.addEventListener("change", () => {
+  desktopToggle.checked = mobileToggle.checked;
+  desktopToggle.dispatchEvent(new Event("change"));
+});
+</script>
+
+<style>
+/* Hide scrollbar but allow scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+</style>
+
+<script>
+function deletePostFromGrid(postId) {
+  currentPostId = postId;
+  deletePost();
+}
+</script>
+
+</body>
+</html>
+
+

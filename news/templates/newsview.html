@@ -481,7 +481,7 @@ tailwind.config = {
         class="w-9 h-9 rounded-full object-cover"
         alt="user"
       >
-        <span>By {{ post.author|default:"Admin" }}</span>
+        <span>By {{ post.author|default:"A" }}</span>
         <span>•</span>
         <span>{{ post.created_at|timesince }} ago</span>
       </div>

@@ -58,14 +58,16 @@ class Post(models.Model):
     video = models.FileField(upload_to="posts/videos/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def related_posts(self, limit=5):
-        """
-        Returns other posts from the same category, excluding this post.
-        """
-        return Post.objects.filter(category=self.category).exclude(id=self.id).order_by('-created_at')[:limit]
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="posts"
+    )
 
-    def __str__(self):
-        return self.title
+    def is_admin_post(self):
+        return self.user and self.user.is_superuser
 
 
 class Signup(models.Model):

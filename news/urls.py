@@ -23,6 +23,12 @@ urlpatterns = [
     path('comment/like/', views.like_comment, name='like_comment'),
     path('comment/delete/', views.delete_comment, name='delete_comment'),
     path('post/like/', views.post_like, name='post_like'),
+    path('profile',views.Profile, name='profile'),
+
+    path("post/edit/<int:post_id>/", views.edit_post_ajax, name="edit_post_ajax"),
+    path("post/delete/<int:post_id>/", views.delete_post_ajax, name="delete_post_ajax"),
+
+
     # -----------------------
     # AJAX URLs
     # -----------------------

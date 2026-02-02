@@ -18,36 +18,54 @@ from django.contrib.sessions.models import Session
 import re
 
 MAX_ATTEMPTS = 5
-LOCKOUT_TIME = 60 * 60  # 1 hour in seconds
+LOCKOUT_TIME = 3600  # 1 hour
 
 
 @never_cache
 def superuser_login(request):
     if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "").strip()
 
+        # ---------------- VALIDATION ----------------
+        if not username or not password:
+            messages.error(request, "Both username and password are required.")
+            return render(request, "admin_login.html")
+
+        # Prevent links in username/password
+        if "http://" in username or "https://" in username or "<" in username or ">" in username:
+            messages.error(request, "Invalid characters in username.")
+            return render(request, "admin_login.html")
+
+        if "http://" in password or "https://" in password or "<" in password or ">" in password:
+            messages.error(request, "Invalid characters in password.")
+            return render(request, "admin_login.html")
+
+        # Allow only safe username characters (letters, numbers, @/./+/-/_)
+        if not re.match(r'^[\w.@+-]+$', username):
+            messages.error(request, "Username contains invalid characters.")
+            return render(request, "admin_login.html")
+
+        # ---------------- RATE LIMITING ----------------
         attempts_key = f"login_attempts_{username}"
         block_key = f"login_block_{username}"
 
-        # Check if user is blocked
         if cache.get(block_key):
             messages.error(
                 request,
-                "Too many failed login attempts. Please try again after 1 hour."
+                "Too many failed login attempts. Try again after 1 hour."
             )
             return render(request, "admin_login.html")
 
+        # ---------------- AUTHENTICATION ----------------
         user = authenticate(request, username=username, password=password)
 
         if user is not None and user.is_superuser:
             # Successful login → reset attempts
             cache.delete(attempts_key)
             cache.delete(block_key)
-
             login(request, user)
             return redirect("admin-dashboard")
-
         else:
             # Failed attempt
             attempts = cache.get(attempts_key, 0) + 1
@@ -68,7 +86,6 @@ def superuser_login(request):
                 )
 
     return render(request, "admin_login.html")
-
 
 # @never_cache
 # @login_required(login_url="/login/")
@@ -806,9 +823,76 @@ def post_like(request):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
+@login_required
+def Profile(request):
+    categories = Category.objects.all()
+    posts = Post.objects.filter(user=request.user).order_by("-id")
+
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        category_id = request.POST.get("category")
+        description = request.POST.get("description", "").strip()
+        media = request.FILES.get("media")
+
+        if not title or not category_id:
+            messages.error(request, "Title and category are required.")
+            return redirect("profile")
+
+        image = None
+        video = None
+
+        if media:
+            if media.content_type.startswith("image/"):
+                image = media
+            elif media.content_type.startswith("video/"):
+                video = media
+            else:
+                messages.error(request, "Upload a valid image or video.")
+                return redirect("profile")
+
+        category = Category.objects.get(id=category_id)
+
+        Post.objects.create(
+            title=title,
+            category=category,
+            description=description,
+            image=image,
+            video=video,
+            user=request.user
+        )
+
+        messages.success(request, "Post uploaded successfully!")
+        return redirect("profile")
+
+    return render(request, "profile.html", {
+        "categories": categories,
+        "posts": posts,
+    })
 
 
+@login_required
+@require_POST
+def edit_post_ajax(request, post_id):
+    post = get_object_or_404(Post, id=post_id, user=request.user)
 
+    post.title = request.POST.get("title")
+    post.description = request.POST.get("description")
 
+    media = request.FILES.get("media")
+    if media:
+        if media.content_type.startswith("image/"):
+            post.image = media
+            post.video = None
+        elif media.content_type.startswith("video/"):
+            post.video = media
+            post.image = None
 
+    post.save()
+    return JsonResponse({"success": True})
 
+@login_required
+@require_POST
+def delete_post_ajax(request, post_id):
+    post = get_object_or_404(Post, id=post_id, user=request.user)
+    post.delete()
+    return JsonResponse({"success": True})
