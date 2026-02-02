@@ -543,9 +543,9 @@ tailwind.config = {
 </button>
 
 
-        <button class="menu-item w-full pl-4 h-12">
+        <button class="menu-item w-full pl-4 h-12"><a href="{% url 'logout' %}?next={{ request.path }}">
           <i class="ph ph-sign-out"></i>
-          <span class="menu-text">Logout</span>
+          <span class="menu-text">Logout</span></a>
         </button>
 
       </div>

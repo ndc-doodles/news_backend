@@ -822,7 +822,7 @@ def post_like(request):
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
-
+@never_cache
 @login_required
 def Profile(request):
     categories = Category.objects.all()
