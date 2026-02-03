@@ -15,7 +15,11 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 # -----------------------
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-secret-key')
 DEBUG = True
-ALLOWED_HOSTS = []  # Add your domain/IP in production
+# ALLOWED_HOSTS = []  # Add your domain/IP in production
+ALLOWED_HOSTS = [
+    "newslive.cybexel.com",
+    "www.newslive.cybexel.com",
+]
 
 # -----------------------
 # Installed apps
@@ -92,6 +96,10 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+CSRF_TRUSTED_ORIGINS = [
+    "http://newslive.cybexel.com",
+    "http://www.newslive.cybexel.com",
+]
 
 # -----------------------
 # Password validation
