@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from cloudinary.models import CloudinaryField
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -54,8 +55,20 @@ class Post(models.Model):
     title = models.CharField(max_length=255)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
-    image = models.ImageField(upload_to="posts/images/", blank=True, null=True)
-    video = models.FileField(upload_to="posts/videos/", blank=True, null=True)
+
+    image = CloudinaryField(
+        "image",
+        blank=True,
+        null=True
+    )
+
+    video = CloudinaryField(
+        "video",
+        resource_type="video",
+        blank=True,
+        null=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     user = models.ForeignKey(
@@ -68,7 +81,6 @@ class Post(models.Model):
 
     def is_admin_post(self):
         return self.user and self.user.is_superuser
-
 
 class Signup(models.Model):
     username = models.CharField(max_length=150, unique=True)

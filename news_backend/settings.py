@@ -37,6 +37,8 @@ INSTALLED_APPS = [
 
     # Your apps
     'news',
+    "cloudinary",
+    "cloudinary_storage",
 
 ]
 
@@ -179,3 +181,16 @@ CACHES = {
 # -----------------------
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
+
+
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": os.getenv("CLOUDINARY_API_KEY"),
+    "API_SECRET": os.getenv("CLOUDINARY_API_SECRET"),
+}
+
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+
+

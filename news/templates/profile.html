@@ -434,17 +434,20 @@ tailwind.config = {
 
 
 
-<div class="flex h-full">
+<div class="flex h-screen overflow-hidden">
+
+
 
   <!-- SIDEBAR -->
   <aside
-    id="sidebar"
-    class="h-full pb-8 w-80
-           border-r border-gray-200
-           shadow-[4px_0_10px_rgba(0,0,0,0.1)]
-           transition-all duration-300
-           relative flex-shrink-0 "
-  >
+  id="sidebar"
+  class="h-full w-80 flex-shrink-0
+         border-r border-gray-200
+         shadow-[4px_0_10px_rgba(0,0,0,0.1)]
+         transition-all duration-300
+         relative overflow-hidden"
+>
+
 
     <!-- TOGGLE BUTTON -->
     <button
@@ -553,10 +556,20 @@ tailwind.config = {
     </div>
   </aside>
 
-    <main class="flex-1 p-20 mt-5">
+  <main
+  class="flex-1 h-full
+         overflow-hidden
+         p-4 sm:p-6 md:p-10 lg:p-20
+         mt-16 md:mt-5
+         transition-all duration-300"
+>
+
+
 
   <!-- PROFILE SECTION -->
-  <div id="profileSectionMain">
+<div id="profileSectionMain"
+     class="w-full max-w-7xl mx-auto section-scroll no-scrollbar">
+
 
     <h1 class="text-[2rem] mb-6">
       Hi, <span class="font-medium">User</span>
@@ -614,8 +627,9 @@ tailwind.config = {
     </div>
   </div>
 
-<!-- NOTIFICATIONS SECTION -->
-<div id="notificationsSection" class="hidden max-w-3xl mx-auto">
+<div id="notificationsSection"
+     class="hidden w-full max-w-7xl mx-auto section-scroll no-scrollbar">
+
 
   <h2 class="text-2xl font-semibold mb-6">Notifications</h2>
 
@@ -662,7 +676,7 @@ tailwind.config = {
 
 
  <!-- LIKES -->
-<div id="likesSection" class="hidden">
+<div id="likesSection" class="hidden w-full max-w-7xl mx-auto section-scroll no-scrollbar">
   <h2 class="text-xl font-semibold mb-6">Liked Posts</h2>
 
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -680,7 +694,9 @@ tailwind.config = {
 
 
 <!-- UPLOADS GRID -->
-<div id="uploadsSection" class="p-6 hidden ">
+<div id="uploadsSection"
+     class="hidden w-full max-w-7xl mx-auto section-scroll no-scrollbar p-6">
+
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-xl font-semibold">Uploads</h2>
     <button
@@ -745,7 +761,9 @@ tailwind.config = {
 
 
 <!-- UPGRADE -->
-<div id="upgradeSection" class="hidden">
+<div id="upgradeSection"
+     class="hidden w-full max-w-7xl mx-auto section-scroll no-scrollbar">
+
   <h2 class="text-xl font-semibold mb-6">Plan & Upgrades</h2>
 
   <!-- Current Plan -->
@@ -1636,14 +1654,18 @@ mobileToggle?.addEventListener("change", () => {
 </script>
 
 <style>
-/* Hide scrollbar but allow scroll */
-.no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+.section-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 0.75rem;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE & Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>
 
