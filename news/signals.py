@@ -14,7 +14,6 @@ from .models import Profile
 #             full_name=instance.get_full_name()
 #         )
 
-
 @receiver(social_account_added)
 @receiver(social_account_updated)
 def update_profile_from_google(sender, request, sociallogin, **kwargs):
@@ -28,3 +27,4 @@ def update_profile_from_google(sender, request, sociallogin, **kwargs):
     profile.avatar = data.get("picture", "")
     profile.provider = "google"
     profile.save()
+
