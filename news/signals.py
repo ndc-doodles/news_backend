@@ -5,14 +5,14 @@ from django.contrib.auth.models import User
 from allauth.socialaccount.signals import social_account_added, social_account_updated
 from .models import Profile
 
-@receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(
-            user=instance,
-            email=instance.email,
-            full_name=instance.get_full_name()
-        )
+# @receiver(post_save, sender=User)
+# def create_profile(sender, instance, created, **kwargs):
+#     if created:
+#         Profile.objects.create(
+#             user=instance,
+#             email=instance.email,
+#             full_name=instance.get_full_name()
+#         )
 
 
 @receiver(social_account_added)
