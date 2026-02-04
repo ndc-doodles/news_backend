@@ -18,7 +18,7 @@ urlpatterns = [
 
     path('stories/delete/', views.delete_story, name='delete-story'),
     path('add-post/', views.add_post, name='add-post'),
-    path('news/edit/<int:pk>/', views.edit_news, name='edit-news'),
+    path('news/edit/<uuid:pk>/', views.edit_news, name='edit-news'),
     path('news/delete/', views.delete_news, name='delete-news'),
     path('comment/add/', views.add_comment, name='add_comment'),
     path('comment/like/', views.like_comment, name='like_comment'),

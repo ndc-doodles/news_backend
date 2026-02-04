@@ -288,6 +288,11 @@ def edit_news(request, pk):
     try:
         post = get_object_or_404(Post, pk=pk)
 
+        # Optional: allow only admin or the post owner to edit
+        if not (request.user.is_superuser or post.user == request.user):
+            return JsonResponse({"error": "Permission denied."}, status=403)
+
+        # Get form data
         title = request.POST.get("title")
         description = request.POST.get("description")
         category_id = request.POST.get("category")
@@ -304,13 +309,14 @@ def edit_news(request, pk):
             file = request.FILES["media"]
             if file.content_type.startswith("image"):
                 post.image = file
-                post.video = None  # Clear old video
+                post.video = None  # Clear previous video
             elif file.content_type.startswith("video"):
                 post.video = file
-                post.image = None  # Clear old image
+                post.image = None  # Clear previous image
 
         post.save()
 
+        # Determine media type for response
         media_type = None
         media_url = None
         if post.image:
@@ -329,6 +335,7 @@ def edit_news(request, pk):
 
     except Exception as e:
         return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
+
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
