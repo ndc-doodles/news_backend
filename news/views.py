@@ -418,6 +418,8 @@ def base(request):
 
     return render(request, "base.html", context)
 
+import random
+
 def index(request):
     posts = (
         Post.objects
@@ -435,9 +437,8 @@ def index(request):
     media_type = request.GET.get("media")
     date = request.GET.get("date")
 
-    if category_id:
-        if category_id.isdigit():
-            posts = posts.filter(category_id=int(category_id))
+    if category_id and category_id.isdigit():
+        posts = posts.filter(category_id=int(category_id))
 
     if media_type == "Image":
         posts = posts.filter(image__isnull=False).exclude(image="")
@@ -448,18 +449,27 @@ def index(request):
         posts = posts.filter(created_at__date=date)
 
     # --------------------
-    # Logged-in user profile (Google / normal)
+    # BIG POST POSITIONS
     # --------------------
-    profile = None
-    if request.user.is_authenticated:
-        profile = getattr(request.user, "profile", None)
+    total = posts.count()
+
+    # Safe spacing: every 6th item max
+    possible_indexes = list(range(0, total, 6))
+    big_indexes = random.sample(
+        possible_indexes,
+        min(3, len(possible_indexes))  # 👈 number of big posts
+    )
+
+    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
 
     return render(request, "index.html", {
         "posts": posts,
         "stories": stories,
         "categories": categories,
-        "profile": profile,   # 👈 available in template
+        "profile": profile,
+        "big_indexes": big_indexes,  # 👈 NEW
     })
+
 
 
 def newsview(request, post_id):
@@ -687,7 +697,7 @@ def add_comment(request):
     post_id = request.POST.get("post_id")
     text = request.POST.get("text", "").strip()
     audio = request.FILES.get("audio")
-    parent_id = request.POST.get("parent_id")  # for replies
+    parent_id = request.POST.get("parent_id")
 
     if not post_id:
         return JsonResponse({"error": "Post ID missing"}, status=400)
@@ -695,17 +705,15 @@ def add_comment(request):
     if not text and not audio:
         return JsonResponse({"error": "Empty comment"}, status=400)
 
-    # Validate text if present
-    if text:
-        if len(text) > MAX_COMMENT_LENGTH:
-            return JsonResponse({"error": "Comment too long"}, status=400)
-        if URL_PATTERN.search(text):
-            return JsonResponse({"error": "Links are not allowed"}, status=400)
-        if SQL_PATTERN.search(text):
-            return JsonResponse({"error": "Invalid content"}, status=400)
-
     post = get_object_or_404(Post, id=post_id)
-    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    profile, _ = Profile.objects.get_or_create(
+        user=request.user,
+        defaults={
+            "full_name": request.user.get_full_name(),
+            "email": request.user.email,
+        }
+    )
 
     parent = None
     if parent_id:
@@ -714,9 +722,9 @@ def add_comment(request):
     comment = Comment.objects.create(
         user=request.user,
         post=post,
+        parent=parent,
         text=text,
-        audio=audio,
-        parent=parent
+        audio=audio
     )
 
     return JsonResponse({
@@ -724,7 +732,7 @@ def add_comment(request):
         "text": comment.text,
         "audio": comment.audio.url if comment.audio else "",
         "username": request.user.username,
-        "avatar": profile.avatar.url if profile.avatar else "/static/avatar.png",
+        "avatar": profile.avatar or "/static/avatar.png",
         "parent_id": parent.id if parent else None,
         "likes_count": 0
     })
@@ -824,7 +832,7 @@ def post_like(request):
 
 @never_cache
 @login_required
-def Profile(request):
+def profile_view(request):
     categories = Category.objects.all()
     posts = Post.objects.filter(user=request.user).order_by("-id")
 
@@ -838,8 +846,7 @@ def Profile(request):
             messages.error(request, "Title and category are required.")
             return redirect("profile")
 
-        image = None
-        video = None
+        image = video = None
 
         if media:
             if media.content_type.startswith("image/"):
@@ -850,7 +857,7 @@ def Profile(request):
                 messages.error(request, "Upload a valid image or video.")
                 return redirect("profile")
 
-        category = Category.objects.get(id=category_id)
+        category = get_object_or_404(Category, id=category_id)
 
         Post.objects.create(
             title=title,
@@ -868,7 +875,6 @@ def Profile(request):
         "categories": categories,
         "posts": posts,
     })
-
 
 @login_required
 @require_POST

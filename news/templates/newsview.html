@@ -435,6 +435,12 @@ tailwind.config = {
 
 <!-- ================= NEWS PAGE ================= -->
 <div class="max-w-7xl mx-auto mt-28 px-4">
+<button
+  onclick="window.history.back()"
+  class="flex items-center gap-2 text-sm transition mb-4"
+>
+  ← Back
+</button>
 
   <div class="flex flex-col md:flex-row gap-8">
 
@@ -476,15 +482,37 @@ tailwind.config = {
 
       <!-- AUTHOR -->
       <div class="flex items-center gap-3 text-gray-400 text-sm mb-6">
-         <img
-        src="{% static 'images/users.jpg' %}"
-        class="w-9 h-9 rounded-full object-cover"
-        alt="user"
-      >
-        <span>By {{ post.author|default:"A" }}</span>
-        <span>•</span>
-        <span>{{ post.created_at|timesince }} ago</span>
-      </div>
+
+  {% if not post.user %}
+    <img
+      src="{% static 'images/users.jpg' %}"
+      class="w-9 h-9 rounded-full object-cover"
+      alt="admin"
+    >
+    <span>By Admin</span>
+
+  {% elif post.is_admin_post %}
+    <img
+      src="{% static 'images/users.jpg' %}"
+      class="w-9 h-9 rounded-full object-cover"
+      alt="admin"
+    >
+    <span>By Admin</span>
+
+  {% else %}
+    <img
+      src="{% static 'images/users.jpg' %}"
+      class="w-9 h-9 rounded-full object-cover"
+      alt="user"
+    >
+    <span>By {{ post.user.username }}</span>
+  {% endif %}
+
+  <span>•</span>
+  <span>{{ post.created_at|timesince }} ago</span>
+
+</div>
+
 
       <!-- ARTICLE CONTENT -->
       <div class="space-y-4 text-base sm:text-lg leading-relaxed">
@@ -494,16 +522,31 @@ tailwind.config = {
       <!-- ACTION BAR -->
       <div class="flex items-center gap-6 border-t mt-8 pt-4">
 
-        <!-- POST LIKE -->
-        <button id="postLikeBtn" data-post-id="{{ post.id }}" class="flex items-center gap-1">
-          <svg class="w-5 h-5 heartIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318
-                     C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318
-                     1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
-          </svg>
-          <span id="postLikeCount">{{ post.likes.count }}</span>
-        </button>
+       <!-- POST LIKE -->
+{% if user.is_authenticated %}
+  <button id="postLikeBtn"
+          data-post-id="{{ post.id }}"
+          class="flex items-center gap-1">
+{% else %}
+  <button onclick="openModal('login')"
+          class="flex items-center gap-1 text-gray-400 cursor-pointer">
+{% endif %}
+
+    <svg class="w-5 h-5 heartIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4.318 6.318C5.284 5.352 6.864 5 8.5 5c1.636 0 3.216.352 4.182 1.318l.318.318.318-.318
+           C14.284 5.352 15.864 5 17.5 5c1.636 0 3.216.352 4.182 1.318
+           1.38 1.38 1.38 3.62 0 5L12 21 4.318 11.318c-1.38-1.38-1.38-3.62 0-5z"/>
+    </svg>
+
+    <span id="postLikeCount">{{ post.likes.count }}</span>
+
+{% if user.is_authenticated %}
+  </button>
+{% else %}
+  </button>
+{% endif %}
+
 
         <!-- COMMENTS TOGGLE -->
         <button id="commentToggle" class="flex items-center gap-2 hover:text-neon transition">
@@ -637,6 +680,7 @@ tailwind.config = {
 <form id="csrfForm" style="display:none;">{% csrf_token %}</form>
 
 
+{% if related_posts %}
 <section class="mt-16 border-t pt-10 px-6 sm:px-10 lg:px-20 xl:px-28">
   <h2 class="text-2xl sm:text-3xl font-serif font-bold mb-8">
     Related News
@@ -651,11 +695,11 @@ tailwind.config = {
         {{ related_posts.0.title }}
       </h2>
 
-      <p class="mt-4 ">
+      <p class="mt-4">
         {{ related_posts.0.description|truncatechars:160 }}
       </p>
 
-      <p class="text-sm  mt-3">
+      <p class="text-sm mt-3">
         {{ related_posts.0.created_at|timesince }} ago | {{ related_posts.0.category.name }}
       </p>
     </a>
@@ -708,7 +752,7 @@ tailwind.config = {
       <p class="text-sm mt-2">
         {{ post.description|truncatechars:110 }}
       </p>
-      <div class="text-xs  mt-2">
+      <div class="text-xs mt-2">
         {{ post.created_at|timesince }} ago | {{ post.category.name }}
       </div>
     </a>
@@ -717,6 +761,7 @@ tailwind.config = {
   {% endif %}
 
 </section>
+{% endif %}
 
 <footer class="mt-20 border-t  px-6 sm:px-10 lg:px-20 xl:px-28">
   <div class="py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
