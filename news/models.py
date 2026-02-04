@@ -144,10 +144,10 @@ class Comment(models.Model):
         return f"{self.user.username} - {self.post.id}"
 
 
-# @receiver(post_save, sender=User)
-# def create_profile(sender, instance, created, **kwargs):
-#     if created:
-#         Profile.objects.create(user=instance)
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
 
 class PostLike(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
