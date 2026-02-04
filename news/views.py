@@ -16,6 +16,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.sessions.models import Session
 import re
+from uuid import UUID
 
 MAX_ATTEMPTS = 5
 LOCKOUT_TIME = 3600  # 1 hour
@@ -437,8 +438,13 @@ def index(request):
     media_type = request.GET.get("media")
     date = request.GET.get("date")
 
-    if category_id and category_id.isdigit():
-        posts = posts.filter(category_id=int(category_id))
+    # ✅ UUID-safe category filter
+    if category_id:
+        try:
+            UUID(category_id)
+            posts = posts.filter(category_id=category_id)
+        except ValueError:
+            pass  # ignore invalid UUIDs
 
     if media_type == "Image":
         posts = posts.filter(image__isnull=False).exclude(image="")
@@ -453,23 +459,25 @@ def index(request):
     # --------------------
     total = posts.count()
 
-    # Safe spacing: every 6th item max
     possible_indexes = list(range(0, total, 6))
     big_indexes = random.sample(
         possible_indexes,
-        min(3, len(possible_indexes))  # 👈 number of big posts
+        min(3, len(possible_indexes))
     )
 
-    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
+    profile = (
+        getattr(request.user, "profile", None)
+        if request.user.is_authenticated
+        else None
+    )
 
     return render(request, "index.html", {
         "posts": posts,
         "stories": stories,
         "categories": categories,
         "profile": profile,
-        "big_indexes": big_indexes,  # 👈 NEW
+        "big_indexes": big_indexes,
     })
-
 
 
 def newsview(request, post_id):
@@ -492,17 +500,19 @@ def newsview(request, post_id):
         .order_by("-created_at")[:10]
     )
 
-    profile = None
-    if request.user.is_authenticated:
-        profile = getattr(request.user, "profile", None)
+    profile = (
+        getattr(request.user, "profile", None)
+        if request.user.is_authenticated
+        else None
+    )
 
     return render(request, "newsview.html", {
         "post": post,
         "categories": categories,
         "media_types": ["Image", "Video"],
         "profile": profile,
-        "comments": comments,        # existing
-        "related_posts": related_posts,  # ✅ NEW
+        "comments": comments,
+        "related_posts": related_posts,
     })
 
 

@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from cloudinary.models import CloudinaryField
+import uuid
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -19,6 +20,7 @@ class Category(models.Model):
 
 
 class Story(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     link = models.CharField(
         max_length=200,
         blank=True,
@@ -52,6 +54,7 @@ class Story(models.Model):
 
 
 class Post(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
@@ -105,6 +108,7 @@ class Signup(models.Model):
         return self.reset_token == token and self.reset_token_expiry > timezone.now()
 
 class Profile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(blank=True)
@@ -117,6 +121,7 @@ class Profile(models.Model):
 
 
 class Comment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='comments')
     parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='replies')

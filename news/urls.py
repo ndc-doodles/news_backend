@@ -1,12 +1,13 @@
 from django.urls import path
 from . import views
+from . views import *
 
 urlpatterns = [
     # -----------------------
     # User panel URLs
     # -----------------------
-    path('', views.index, name='index'),
-    path('news/<int:post_id>/', views.newsview, name='newsview'),
+    path("", index, name="index"),
+    path("news/<uuid:post_id>/", newsview, name="newsview"),
 
     # -----------------------
     # Admin URLs
