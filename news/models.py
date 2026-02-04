@@ -86,12 +86,13 @@ class Post(models.Model):
         return self.user and self.user.is_superuser
 
 class Signup(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)  # store hashed password
+    password = models.CharField(max_length=128)  # hashed password
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # For password reset
     reset_token = models.CharField(max_length=64, blank=True, null=True)
     reset_token_expiry = models.DateTimeField(blank=True, null=True)
 
@@ -101,15 +102,24 @@ class Signup(models.Model):
     def generate_reset_token(self):
         self.reset_token = uuid.uuid4().hex
         self.reset_token_expiry = timezone.now() + timedelta(hours=1)
-        self.save()
+        self.save(update_fields=["reset_token", "reset_token_expiry"])
         return self.reset_token
 
     def is_reset_token_valid(self, token):
-        return self.reset_token == token and self.reset_token_expiry > timezone.now()
+        return (
+            self.reset_token == token
+            and self.reset_token_expiry
+            and self.reset_token_expiry > timezone.now()
+        )
 
 class Profile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
     full_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(blank=True)
     avatar = models.URLField(blank=True)
