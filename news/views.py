@@ -201,7 +201,7 @@ from django.utils import timezone
 @user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
 
-    # ================= POST =================
+    # ========================= POST =========================
     if request.method == "POST":
         action = request.POST.get("action")
 
@@ -209,21 +209,24 @@ def admin_dashboard(request):
         if action == "add_category":
             name = request.POST.get("category_name")
             if name:
-                Category.objects.get_or_create(name=name)
+                Category.objects.get_or_create(name=name.strip())
                 messages.success(request, "Category added successfully")
 
         elif action == "edit_category":
             category_id = request.POST.get("category_id")
             name = request.POST.get("category_name")
-            category = get_object_or_404(Category, id=category_id)
-            category.name = name
-            category.save()
-            messages.success(request, "Category updated successfully")
+
+            if category_id and name:
+                category = get_object_or_404(Category, id=category_id)
+                category.name = name.strip()
+                category.save()
+                messages.success(request, "Category updated successfully")
 
         elif action == "delete_category":
             category_id = request.POST.get("category_id")
-            Category.objects.filter(id=category_id).delete()
-            messages.success(request, "Category deleted successfully")
+            if category_id:
+                Category.objects.filter(id=category_id).delete()
+                messages.success(request, "Category deleted successfully")
 
         # ================= STORY =================
         elif action == "add_story":
@@ -251,18 +254,23 @@ def admin_dashboard(request):
         # ================= DELETE USER =================
         elif action == "delete_user":
             user_id = request.POST.get("user_id")
-            user_to_delete = get_object_or_404(User, id=user_id)
 
-            if user_to_delete == request.user:
-                messages.error(request, "You cannot delete yourself.")
-            else:
-                username = user_to_delete.username
-                user_to_delete.delete()
-                messages.success(request, f"User '{username}' deleted successfully.")
+            if user_id:
+                user_to_delete = get_object_or_404(User, id=user_id)
+
+                if user_to_delete == request.user:
+                    messages.error(request, "You cannot delete yourself.")
+                else:
+                    username = user_to_delete.username
+                    user_to_delete.delete()
+                    messages.success(
+                        request,
+                        f"User '{username}' deleted successfully."
+                    )
 
         return redirect("admin-dashboard")
 
-    # ================= GET =================
+    # ========================= GET =========================
 
     categories = Category.objects.order_by("-id")
     stories = Story.objects.order_by("-created_at")
@@ -290,19 +298,24 @@ def admin_dashboard(request):
     users = []
 
     for user in django_users:
-        # SAFE profile access
-        profile = None
-        try:
-            profile = user.profile
-        except:
-            profile = None
+        profile = getattr(user, "profile", None)
+
+        provider = "local"
+        avatar_url = "/static/images/users.jpg"
+
+        if profile:
+            if profile.provider:
+                provider = profile.provider
+
+            if profile.avatar:
+                avatar_url = profile.avatar.url
 
         users.append({
             "signup": user,
             "is_active": user.id in active_user_ids,
             "last_login": user.last_login,
-            "provider": profile.provider if profile else "local",
-            "avatar": profile.avatar if profile and profile.avatar else "/static/images/users.jpg",
+            "provider": provider,
+            "avatar": avatar_url,
             "id": user.id,
         })
 
@@ -320,6 +333,7 @@ def admin_dashboard(request):
             "users": users,
         }
     )
+
 
 @login_required
 @require_POST
