@@ -165,28 +165,8 @@ Your crash happens because this line:
 getattr(user.profile, "provider", "local")
 
 
-still tries to access user.profile first — and if the profile does NOT exist, Django raises:
-
-RelatedObjectDoesNotExist: User has no profile
 
 
-We must never directly access user.profile.
-
-✅ Fully Fixed & Safe admin_dashboard View
-
-This version:
-
-✅ Prevents profile crash
-
-✅ Shows Google + local users
-
-✅ Keeps delete feature
-
-✅ Keeps active session detection
-
-✅ Prevents self-delete
-
-✅ Clean & production safe
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
