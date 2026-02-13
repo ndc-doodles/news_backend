@@ -1151,9 +1151,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     hover:bg-gray-100 dark:hover:bg-zinc-700 transition">
 
           <!-- Avatar -->
-          <img src="{{ u.signup.profile.avatar|default:'/static/images/users.jpg' }}"
-               class="w-9 h-9 rounded-full object-cover"
-               alt="{{ u.signup.username }}">
+          <img src="{{ u.avatar }}"
+     class="w-9 h-9 rounded-full object-cover"
+     alt="{{ u.signup.username }}">
+
 
           <!-- User Info -->
           <div class="leading-tight flex-1">
