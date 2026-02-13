@@ -165,6 +165,7 @@ def superuser_login(request):
 @user_passes_test(lambda u: u.is_superuser)
 def admin_dashboard(request):
 
+    # ================= POST =================
     if request.method == "POST":
         action = request.POST.get("action")
 
@@ -211,22 +212,39 @@ def admin_dashboard(request):
             story.save()
             messages.success(request, "Story added successfully")
 
+        # ================= DELETE USER =================
+        elif action == "delete_user":
+            user_id = request.POST.get("user_id")
+
+            user_to_delete = get_object_or_404(User, id=user_id)
+
+            # Prevent deleting yourself
+            if user_to_delete == request.user:
+                messages.error(request, "You cannot delete yourself.")
+            else:
+                username = user_to_delete.username
+                user_to_delete.delete()
+                messages.success(request, f"User '{username}' deleted successfully.")
+
         return redirect("admin-dashboard")
 
     # ================= GET =================
+
     categories = Category.objects.order_by("-id")
     stories = Story.objects.order_by("-created_at")
-
     news_posts = Post.objects.order_by("-created_at")
     all_posts = news_posts
 
     # ================= USERS LIST =================
 
-    # all normal users (Signup model)
-    signups = Signup.objects.order_by("-created_at")
+    django_users = User.objects.filter(
+        is_superuser=False
+    ).select_related("profile").order_by("-date_joined")
 
-    # active sessions
-    active_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+    active_sessions = Session.objects.filter(
+        expire_date__gte=timezone.now()
+    )
+
     active_user_ids = set()
 
     for session in active_sessions:
@@ -235,35 +253,17 @@ def admin_dashboard(request):
         if uid:
             active_user_ids.add(int(uid))
 
-    # map Django users (google + local)
-    django_users = {
-        u.username: u
-        for u in User.objects.filter(
-            username__in=signups.values_list("username", flat=True),
-            is_superuser=False
-        ).select_related("profile")
-    }
-
-    # final users list with status
     users = []
-    for signup in signups:
-        dj_user = django_users.get(signup.username)
 
-        is_active = False
-        last_login = None
-
-        if dj_user:
-            is_active = dj_user.id in active_user_ids
-            last_login = dj_user.last_login
-
+    for user in django_users:
         users.append({
-            "signup": signup,
-            "is_active": is_active,
-            "last_login": last_login,
-            "provider": getattr(dj_user.profile, "provider", "local") if dj_user else "local",
+            "signup": user,
+            "is_active": user.id in active_user_ids,
+            "last_login": user.last_login,
+            "provider": getattr(user.profile, "provider", "local"),
+            "id": user.id,  # 👈 needed for delete button
         })
 
-    # active users first
     users.sort(key=lambda x: x["is_active"], reverse=True)
 
     return render(
@@ -274,12 +274,9 @@ def admin_dashboard(request):
             "stories": stories,
             "news_posts": news_posts,
             "all_posts": all_posts,
-
-            # 👇 users list (final)
             "users": users,
         }
     )
-
 
 
 @login_required
