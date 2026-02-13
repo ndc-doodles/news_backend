@@ -160,9 +160,6 @@ def superuser_login(request):
 #         }
 #     )
 
-Your crash happens because this line:
-
-getattr(user.profile, "provider", "local")
 
 
 
