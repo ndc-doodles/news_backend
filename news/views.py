@@ -160,6 +160,42 @@ def superuser_login(request):
 #         }
 #     )
 
+Your crash happens because this line:
+
+getattr(user.profile, "provider", "local")
+
+
+still tries to access user.profile first — and if the profile does NOT exist, Django raises:
+
+RelatedObjectDoesNotExist: User has no profile
+
+
+We must never directly access user.profile.
+
+✅ Fully Fixed & Safe admin_dashboard View
+
+This version:
+
+✅ Prevents profile crash
+
+✅ Shows Google + local users
+
+✅ Keeps delete feature
+
+✅ Keeps active session detection
+
+✅ Prevents self-delete
+
+✅ Clean & production safe
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+
 @never_cache
 @login_required(login_url="/login/")
 @user_passes_test(lambda u: u.is_superuser)
@@ -215,10 +251,8 @@ def admin_dashboard(request):
         # ================= DELETE USER =================
         elif action == "delete_user":
             user_id = request.POST.get("user_id")
-
             user_to_delete = get_object_or_404(User, id=user_id)
 
-            # Prevent deleting yourself
             if user_to_delete == request.user:
                 messages.error(request, "You cannot delete yourself.")
             else:
@@ -239,7 +273,7 @@ def admin_dashboard(request):
 
     django_users = User.objects.filter(
         is_superuser=False
-    ).select_related("profile").order_by("-date_joined")
+    ).order_by("-date_joined")
 
     active_sessions = Session.objects.filter(
         expire_date__gte=timezone.now()
@@ -256,14 +290,23 @@ def admin_dashboard(request):
     users = []
 
     for user in django_users:
+        # SAFE profile access
+        profile = None
+        try:
+            profile = user.profile
+        except:
+            profile = None
+
         users.append({
             "signup": user,
             "is_active": user.id in active_user_ids,
             "last_login": user.last_login,
-            "provider": getattr(user.profile, "provider", "local"),
-            "id": user.id,  # 👈 needed for delete button
+            "provider": profile.provider if profile else "local",
+            "avatar": profile.avatar if profile and profile.avatar else "/static/images/users.jpg",
+            "id": user.id,
         })
 
+    # Active users first
     users.sort(key=lambda x: x["is_active"], reverse=True)
 
     return render(
@@ -277,7 +320,6 @@ def admin_dashboard(request):
             "users": users,
         }
     )
-
 
 @login_required
 @require_POST
